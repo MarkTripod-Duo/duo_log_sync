@@ -9,14 +9,14 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
-import duo_client # type: ignore
+import duo_client  # type: ignore
 import six
 
 from duologsync.__version__ import __version__
 from duologsync.config import Config
 from duologsync.program import Program, ProgramShutdownError
 
-EXECUTOR = ThreadPoolExecutor(3)
+EXECUTOR = ThreadPoolExecutor()
 MILLISECOND_BASED_LOG_TYPES = [
     Config.AUTH,
     Config.TRUST_MONITOR,
@@ -41,7 +41,7 @@ async def restless_sleep(duration):
 
         # Poll for program running state
         if Program.is_running():
-            duration = duration - 1
+            duration -= 1
             continue
 
         # Otherwise, program is done running, raise an exception to be caught
