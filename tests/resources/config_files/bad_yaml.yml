@@ -5,7 +5,7 @@ duoclient:
 logs::::
   logFilepath: "/tmp/duologsync.log"
   endpoints:
-    e///nabled: ["auth", "adminaction", "telephony"]
+    e///nabled: ["auth", "telephony"]
   polling:
     duration: 2 
     da!!@ysinpast: 180

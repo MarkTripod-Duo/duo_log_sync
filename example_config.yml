@@ -25,6 +25,6 @@ account:
 
   endpoint_server_mappings:
     - endpoints:
-        ["adminaction", "auth", "telephony", "trustmonitor", "activity"]
+        ["auth", "telephony", "trustmonitor", "activity"]
       server: "test"
   is_msp: False

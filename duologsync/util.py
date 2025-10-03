@@ -65,9 +65,9 @@ async def run_in_executor(function_obj):
 
 def store_failed_udp_ingestion_logs(log_type, checkpoint_directory, log):
     file_path = os.path.join(
-                    checkpoint_directory, f"{log_type}_udp_failed_ingestion_logs.txt"
-                )
-    
+        checkpoint_directory, f"{log_type}_udp_failed_ingestion_logs.txt"
+    )
+
     # Open the udp file, 'with' statement automatically closes it
     with open(file_path, "a+") as udp_file:
         udp_file.write(log.decode('utf-8'))
@@ -210,7 +210,7 @@ def check_for_specific_endpoint(endpoint, config):
     Returns True/False if a specific endpoint is in the config.
 
     params:
-    endpoint (string): The endpoint to check [options: auth, telephony, adminaction, trustmonitor, useractivity]
+    endpoint (string): The endpoint to check [options: auth, telephony, trustmonitor, useractivity]
     config: (dict): The dictionary representation of the config.yml
     """
     endpoint_server_mappings = config.get("account", {}).get(

@@ -1,4 +1,4 @@
-Duo Log Sync (v2.3.1)
+Duo Log Sync (v2.4.0)
 ===================
 
 [![Issues](https://img.shields.io/github/issues/duosecurity/duo_log_sync)](https://github.com/duosecurity/duo_log_sync/issues)
@@ -91,7 +91,7 @@ MSP customers gathering logs from linked accounts should create an **Accounts AP
 - The `ikey` is a `account` setting and it is a integration key of the `Admin API` integration. For MSP accoint, this should have integration key for `Accounts API`. It is a `REQUIRED` field.
 - The `skey` is a `account` setting and it is a private key of the `Admin API` integration. For MSP accoint, this should have private key for `Accounts API`. It is a `REQUIRED` field.
 - The `hostname` is a `account` setting and it is a api-hostname of the `Admin API` integration on which the server hosting this account's logs. For MSP accoint, this should have api-hostname for `Accounts API`. It is a `REQUIRED` field.
-- The `endpoints` field is a `endpoint_server_mappings` setting. It is for defining what endpoints the mapping is for as a list. The valid options are `adminaction`, `auth`, `telephony`, `trustmonitor`, `activity`. It is a `REQUIRED` field.
+- The `endpoints` field is a `endpoint_server_mappings` setting. It is for defining what endpoints the mapping is for as a list. The valid options are `auth`, `telephony`, `trustmonitor`, `activity`. It is a `REQUIRED` field.
 - The `server` field is a `endpoint_server_mappings` setting. It is where you define to what servers the logs of certain endpoints should go.This is done by creating a mapping (start with dash -).It is a `REQUIRED` field.
 - The `is_msp` field is to define whether this account is a Duo MSP account with child accounts. If True, then all the child accounts will be accessed and logs will be pulled for each child account. It is a `NOT REQUIRED` field. The default is `False`
 

@@ -29,7 +29,6 @@ class TestApp(TestCase):
                 "endpoint_server_mappings": [
                     {
                         "endpoints": [
-                            "adminaction",
                             "auth",
                             "telephony",
                             "trustmonitor",
@@ -46,14 +45,13 @@ class TestApp(TestCase):
         create_tasks(server_to_writer)
 
         calls = [
-            call("adminaction", "writer_1", "duo_admin"),
             call("auth", "writer_1", "duo_admin"),
             call("telephony", "writer_1", "duo_admin"),
             call("trustmonitor", "writer_1", "duo_admin"),
             call("activity", "writer_1", "duo_admin"),
         ]
 
-        self.assertEquals(mock.call_count, 5)
+        self.assertEquals(mock.call_count, 4)
         mock.assert_has_calls(calls, any_order=True)
 
     @patch("duologsync.app.create_admin", return_value=duo_client.Accounts)
@@ -74,7 +72,7 @@ class TestApp(TestCase):
                 "hostname": "a",
                 "endpoint_server_mappings": [
                     {
-                        "endpoints": ["adminaction", "auth", "telephony", "activity"],
+                        "endpoints": ["auth", "telephony", "activity"],
                         "server": "Main",
                     }
                 ],
@@ -86,17 +84,15 @@ class TestApp(TestCase):
         create_tasks(server_to_writer)
 
         calls = [
-            call("adminaction", "writer_1", duo_client.Accounts, "12345"),
             call("auth", "writer_1", duo_client.Accounts, "12345"),
             call("telephony", "writer_1", duo_client.Accounts, "12345"),
-            call("adminaction", "writer_1", duo_client.Accounts, "56789"),
             call("auth", "writer_1", duo_client.Accounts, "56789"),
             call("telephony", "writer_1", duo_client.Accounts, "56789"),
             call("activity", "writer_1", duo_client.Accounts, "56789"),
         ]
 
         self.assertEqual(mock_childaccount.call_count, 1)
-        self.assertEqual(mock.call_count, 8)
+        self.assertEqual(mock.call_count, 6)
         mock.assert_has_calls(calls, any_order=True)
 
     @patch("duologsync.app.create_admin", return_value="duo_admin")
@@ -112,7 +108,7 @@ class TestApp(TestCase):
                 "endpoint_server_mappings": [
                     {"endpoints": ["auth", "telephony"], "server": "Main"},
                     {
-                        "endpoints": ["adminaction", "trustmonitor", "activity"],
+                        "endpoints": ["trustmonitor", "activity"],
                         "server": "Backup",
                     },
                 ],
@@ -124,14 +120,13 @@ class TestApp(TestCase):
         create_tasks(server_to_writer)
 
         calls = [
-            call("adminaction", "writer_2", "duo_admin"),
             call("trustmonitor", "writer_2", "duo_admin"),
             call("activity", "writer_2", "duo_admin"),
             call("auth", "writer_1", "duo_admin"),
             call("telephony", "writer_1", "duo_admin"),
         ]
 
-        self.assertEquals(mock.call_count, 5)
+        self.assertEquals(mock.call_count, 4)
         mock.assert_has_calls(calls, any_order=True)
 
     @patch("duologsync.app.create_admin", return_value="duo_admin")
@@ -139,7 +134,6 @@ class TestApp(TestCase):
     def test_create_tasks_one_server_per_endpoint(self, mock, _):
         server_to_writer = {
             "AuthServer": "writer_1",
-            "AdminServer": "writer_2",
             "TelephonyServer": "writer_3",
             "TrustMonitorServer": "writer_4",
             "ActivityServer": "writer_5",
@@ -152,7 +146,6 @@ class TestApp(TestCase):
                 "hostname": "a",
                 "endpoint_server_mappings": [
                     {"endpoints": ["auth"], "server": "AuthServer"},
-                    {"endpoints": ["adminaction"], "server": "AdminServer"},
                     {"endpoints": ["telephony"], "server": "TelephonyServer"},
                     {"endpoints": ["trustmonitor"], "server": "TrustMonitorServer"},
                     {"endpoints": ["activity"], "server": "ActivityServer"},
@@ -165,12 +158,11 @@ class TestApp(TestCase):
         create_tasks(server_to_writer)
 
         calls = [
-            call("adminaction", "writer_2", "duo_admin"),
             call("auth", "writer_1", "duo_admin"),
             call("telephony", "writer_3", "duo_admin"),
             call("trustmonitor", "writer_4", "duo_admin"),
             call("activity", "writer_5", "duo_admin"),
         ]
 
-        self.assertEquals(mock.call_count, 5)
+        self.assertEquals(mock.call_count, 4)
         mock.assert_has_calls(calls, any_order=True)

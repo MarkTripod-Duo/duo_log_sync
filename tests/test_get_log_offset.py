@@ -122,44 +122,6 @@ class TestGetLogOffset(TestCase):
         )
         self.assertEqual(offset_in_metadata, producer_offset)
 
-    def test_adminaction_offset_value_producer(self):
-        adminaction_response = [
-            {
-                "action": "admin_login",
-                "description": '{"ip_address": "72.35.40.116", "device": "248-971-9157", "primary_auth_method": "Password", "factor": "push"}',
-                "isotimestamp": "2020-02-10T14:41:22+00:00",
-                "object": None,
-                "timestamp": 1581345682,
-                "username": "CJ Na",
-                "eventtype": "administrator",
-                "host": "api-first.test.duosecurity.com",
-            }
-        ]
-        adminaction_current_offset = adminaction_response[-1]["timestamp"] + 1
-        adminaction_offset_to_set = Producer.get_log_offset(
-            adminaction_response, log_type=Config.ADMIN
-        )
-        self.assertEqual(adminaction_current_offset, adminaction_offset_to_set)
-
-    def test_adminaction_offset_value_consumer(self):
-        adminaction_response = [
-            {
-                "action": "admin_login",
-                "description": '{"ip_address": "72.35.40.116", "device": "248-971-9157", "primary_auth_method": "Password", "factor": "push"}',
-                "isotimestamp": "2020-02-10T14:41:22+00:00",
-                "object": None,
-                "timestamp": 1581345682,
-                "username": "CJ Na",
-                "eventtype": "administrator",
-                "host": "api-first.test.duosecurity.com",
-            }
-        ]
-        adminaction_current_offset = adminaction_response[0]["timestamp"] + 1
-        adminaction_offset_to_set = Producer.get_log_offset(
-            adminaction_response[0], log_type=Config.ADMIN
-        )
-        self.assertEqual(adminaction_current_offset, adminaction_offset_to_set)
-
     def test_telephony_offset_value_producer(self):
         sample_telephony_response = {
             "items": [

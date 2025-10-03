@@ -185,7 +185,7 @@ class TestConfig(TestCase):
                 'hostname': 'api-test.first.duosecurity.com',
                 'endpoint_server_mappings': [
                     {
-                        'endpoints': ['adminaction', 'auth'],
+                        'endpoints': ['auth'],
                         'server': 'main server'
                     },
                     {

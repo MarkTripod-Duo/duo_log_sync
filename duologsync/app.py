@@ -20,8 +20,6 @@ import asyncio
 import logging
 import signal
 
-from duologsync.consumer.adminaction_consumer import AdminactionConsumer
-from duologsync.producer.adminaction_producer import AdminactionProducer
 from duologsync.consumer.authlog_consumer import AuthlogConsumer
 from duologsync.producer.authlog_producer import AuthlogProducer
 from duologsync.consumer.telephony_consumer import TelephonyConsumer
@@ -208,17 +206,6 @@ def create_consumer_producer_pair(endpoint, writer, admin, child_account=None):
             url_path="/admin/v2/logs/telephony",
         )
         consumer = TelephonyConsumer(log_format, log_queue, writer)
-    elif endpoint == Config.ADMIN:
-        if Config.account_is_msp():
-            producer = AdminactionProducer(
-                admin.json_api_call,
-                log_queue,
-                child_account_id=child_account,
-                url_path="/admin/v1/logs/administrator",
-            )
-        else:
-            producer = AdminactionProducer(admin.get_administrator_log, log_queue)
-        consumer = AdminactionConsumer(log_format, log_queue, writer, child_account)
     elif endpoint == Config.TRUST_MONITOR:
         producer = TrustMonitorProducer(
             admin.get_trust_monitor_events_by_offset, log_queue

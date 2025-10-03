@@ -29,7 +29,6 @@ class Config:
     JSON = 'JSON'
 
     # Log type constants
-    ADMIN = 'adminaction'
     AUTH = 'auth'
     TELEPHONY = 'telephony'
     TRUST_MONITOR = 'trustmonitor'
@@ -168,7 +167,7 @@ class Config:
                 'type': 'list',
                 'empty': False,
                 'required': True,
-                'allowed': [ADMIN, AUTH, TELEPHONY, TRUST_MONITOR, ACTIVITY]
+                'allowed': [AUTH, TELEPHONY, TRUST_MONITOR, ACTIVITY]
             }
         }
     )
