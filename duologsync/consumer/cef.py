@@ -17,7 +17,7 @@ DEVICE_VERSION = __version__
 SEVERITY = '5'
 
 
-def log_to_cef(log, keys_to_labels):
+def log_to_cef(log, keys_to_labels, log_type):
     """
     Create and return a CEF-type log given a Duo log.
 
@@ -35,11 +35,22 @@ def log_to_cef(log, keys_to_labels):
     syslog_header = ' '.join([syslog_date_time, socket.gethostname()])
 
     # Additional required prefix fields
-    signature_id = log.get('eventtype', '')
-    if signature_id == 'administrator':
-        name = log.get('action', '')
+    if log_type == Config.ACTIVITY:
+        action_extended = log.get('action_extended', None)
+        if action_extended:
+            signature_id = action_extended.get('name', '')
+        else:
+            action = log.get('action')
+            signature_id = action.get('name', '') if isinstance(action, dict) else action or ''
+
+        actor = log.get('actor', None)
+        name = actor.get('type', '') if actor else ''
     else:
-        name = log.get('eventtype', '')
+        signature_id = log.get('eventtype', '')
+        if signature_id == 'administrator':
+            name = log.get('action', '')
+        else:
+            name = log.get('eventtype', '')
 
     # Construct the beginning of the CEF message
     header = '|'.join([

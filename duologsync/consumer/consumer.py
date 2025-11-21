@@ -114,7 +114,7 @@ class Consumer:
         formatted_log = None
 
         if self.log_format == Config.CEF:
-            formatted_log = log_to_cef(log, self.keys_to_labels)
+            formatted_log = log_to_cef(log, self.keys_to_labels, self.log_type)
         elif self.log_format == Config.JSON:
             formatted_log = json.dumps(log)
         else:

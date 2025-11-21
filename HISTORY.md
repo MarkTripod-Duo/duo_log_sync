@@ -1,5 +1,9 @@
 ## Change Log
 
+### 2.4.1
+
+Common Event Format (CEF) Support added for Activity Logs Consumer
+
 ### 2.4.0
 
 Upgraded Duo client from v5.4.0 -> v5.5.0
