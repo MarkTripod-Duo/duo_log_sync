@@ -23,10 +23,14 @@ CI_PROJECT_DIR="${CI_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"
 # Path to the custom report formatter script
 export PYTHONPATH="${CI_PROJECT_DIR}"/"${REPORT_FORMATTER_DIR}"
 
-# The f flag indicates to Pylint that a report should be produced, compatible 
-# with Gitlab Code Climate. The report will be saved to the file indicated on 
-# the last line. Pylint will lint all code in the directory passed and all 
-# the subdirectories.
-pylint -f pylint_to_gitlab_codeclimate.GitlabCodeClimateReporter \
-    "${CI_PROJECT_DIR}"/"${SOURCE_DIR}" > \
-    "${CI_PROJECT_DIR}"/"${CODE_REPORT_PATH}"
+# If running in GitLab, format pylint output in CodeClimate format, which is
+# what GitLab expects. Otherwise use the standard JSON output.
+if [[ -n ${GITLAB_CI} ]]; then
+    pylint -f pylint_to_gitlab_codeclimate.GitlabCodeClimateReporter \
+        "${CI_PROJECT_DIR}"/"${SOURCE_DIR}" > \
+        "${CI_PROJECT_DIR}"/"${CODE_REPORT_PATH}"
+else
+    pylint -f json \
+        "${CI_PROJECT_DIR}"/"${SOURCE_DIR}" > \
+        "${CI_PROJECT_DIR}"/"${CODE_REPORT_PATH}" || true
+fi

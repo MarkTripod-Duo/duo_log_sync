@@ -1,0 +1,11 @@
+---
+name: "Pytest JUnit Annotate Action"
+description: "Parse JUnit XML test report and annotate PRs with failed tests"
+author: "Your Name"
+inputs:
+  file:
+    description: "Path to the JUnit XML report"
+    required: true
+runs:
+  using: "node24"
+  main: "dist/index.js"

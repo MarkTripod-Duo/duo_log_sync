@@ -51,7 +51,7 @@ class TestApp(TestCase):
             call("activity", "writer_1", "duo_admin"),
         ]
 
-        self.assertEquals(mock.call_count, 4)
+        self.assertEqual(mock.call_count, 4)
         mock.assert_has_calls(calls, any_order=True)
 
     @patch("duologsync.app.create_admin", return_value=duo_client.Accounts)
@@ -126,7 +126,7 @@ class TestApp(TestCase):
             call("telephony", "writer_1", "duo_admin"),
         ]
 
-        self.assertEquals(mock.call_count, 4)
+        self.assertEqual(mock.call_count, 4)
         mock.assert_has_calls(calls, any_order=True)
 
     @patch("duologsync.app.create_admin", return_value="duo_admin")
@@ -164,5 +164,5 @@ class TestApp(TestCase):
             call("activity", "writer_5", "duo_admin"),
         ]
 
-        self.assertEquals(mock.call_count, 4)
+        self.assertEqual(mock.call_count, 4)
         mock.assert_has_calls(calls, any_order=True)

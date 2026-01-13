@@ -1,0 +1,11 @@
+---
+name: "Pylint Annotate Action"
+description: "Parse Pylint JSON output and annotate PRs"
+author: "Your Name"
+inputs:
+  file:
+    description: "Path to the pylint JSON report"
+    required: true
+runs:
+  using: "node24"
+  main: "dist/index.js"

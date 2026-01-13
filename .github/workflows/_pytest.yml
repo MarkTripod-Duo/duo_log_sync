@@ -1,0 +1,45 @@
+---
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        required: true
+        type: string
+      annotate:
+        default: false
+        required: false
+        type: boolean
+
+
+jobs:
+  test:
+    runs-on:
+      group: duo-ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          cache: pip
+          python-version: ${{ inputs.python-version }}
+          cache-dependency-path: requirements-dev-${{ inputs.python-version}}.txt
+      - name: Install setuptools
+        run: pip install --force-reinstall setuptools
+      - name: Install dependencies
+        run: pip install -r requirements-dev-${{ inputs.python-version }}.txt
+      - name: Run test.sh
+        run: ${GITHUB_WORKSPACE}/_ci/bin/test.sh
+      - name: Publish test annotations
+        if: always() && inputs.annotate == 'true'
+        uses: ./.github/actions/pytest-annotate
+        with:
+          file: tests/TEST-duo_log_sync.xml
+      - name: Artifact test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: junit-report-${{ inputs.python-version }}
+          path: "**/TEST-duo_log_sync.xml"

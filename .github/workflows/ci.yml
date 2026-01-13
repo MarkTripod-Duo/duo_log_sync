@@ -1,0 +1,110 @@
+---
+name: CI
+on:
+  workflow_dispatch:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  lint:
+    runs-on:
+      group: duo-ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          cache: pip
+          cache-dependency-path: requirements-dev-3.13.txt
+          python-version: 3.13
+      - name: Install setuptools
+        run: pip install --force-reinstall setuptools
+      - name: Install dependencies
+        run: pip install -r requirements-dev-3.13.txt
+      - name: Run lint.sh
+        run: ${GITHUB_WORKSPACE}/_ci/bin/lint.sh
+      - name: Publish lint annotations
+        if: always()
+        uses: ./.github/actions/pylint-annotate
+        with:
+          file: duologsync/codequality.json
+      - name: Artifact report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pylint-report
+          path: "**/codequality.json"
+
+  test:
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.6 is not available on any GitHub Actions runner
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+        include:
+          - python-version: '3.13'
+            annotate: true
+    uses: ./.github/workflows/_pytest.yml
+    with:
+      python-version: ${{ matrix.python-version }}
+      annotate: ${{ matrix.annotate == 'true' && true || false }}
+
+  success:
+    name: Success
+    needs:
+      - lint
+      - test
+    if: always()
+    runs-on:
+      group: duo-ubuntu-latest
+    steps:
+      - name: Success
+        run: |
+          needs='${{ toJSON(needs) }}'
+          jobs=$(echo $needs | jq -r 'keys[]')
+          status=0
+          for job in $jobs; do
+            result=$(echo $needs | jq -r ".[\"$job\"].result")
+            # check if job is not success or skipped
+            if [ "$result" != "success" ] && [ "$result" != "skipped" ]; then
+              echo "Job $job unsuccessful with result: $result"
+              status=1
+            fi
+          done
+          if [ $status -eq 1 ]; then
+            echo "CI workflow unsuccessful :("
+            exit 1
+          else
+            echo "OK"
+          fi
+
+  diffatron:
+    name: Diffatron
+    needs: success
+    if: |
+      always() &&
+      needs.success.result == 'success' &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.state == 'open' &&
+      github.event.pull_request.base.ref == github.event.pull_request.base.repo.default_branch &&
+      ! github.event.pull_request.draft
+    permissions:
+      contents: read
+      pull-requests: read
+    secrets:
+      token: ${{ secrets.GITHUB_TOKEN }}
+      webex_bot_token: ${{ secrets.diffatron_webex_bot_token }}
+      webhook_url: ${{ secrets.diffatron_webhook_url }}
+    uses: cisco-sbg/ZT-github-actions/.github/workflows/diffatron.yml@main
+    with:
+      platform: both
