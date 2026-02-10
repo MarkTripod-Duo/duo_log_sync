@@ -515,7 +515,7 @@ class Writer:
                 return
             await self.writer.write(data, log_type)
         else:
-            self.writer.write(data)
+            await self.writer.write(data)
             await self.writer.drain()
 
     def register_log_type(self, log_type):
