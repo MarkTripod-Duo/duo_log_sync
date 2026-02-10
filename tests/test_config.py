@@ -1,10 +1,9 @@
 from unittest import TestCase
 from unittest.mock import patch
-import os
-import sys
-from yaml import YAMLError
+
 from duologsync.config import Config
 from duologsync.program import Program
+
 
 def running_is_false(msg):
     Program._running = False
@@ -162,6 +161,12 @@ class TestConfig(TestCase):
                 'proxy': {
                     'proxy_server': 'test.com',
                     'proxy_port': 1234
+                        },
+                    'file_output': {
+                            'queue_max_size': 5000,
+                            'max_retries': 3,
+                            'retry_backoff_seconds': 0.2,
+                            'enable_test_input': False
                 }
             },
             'servers': [
@@ -250,8 +255,42 @@ class TestConfig(TestCase):
             config['dls_settings']['checkpointing']['enabled'], None)
         self.assertNotEqual(
             config['dls_settings']['checkpointing']['directory'], None)
+        self.assertNotEqual(
+                config['dls_settings']['file_output']['queue_max_size'], None
+                )
+        self.assertNotEqual(
+                config['dls_settings']['file_output']['max_retries'], None
+                )
+        self.assertNotEqual(
+                config['dls_settings']['file_output']['retry_backoff_seconds'], None
+                )
+        self.assertNotEqual(
+                config['dls_settings']['file_output']['enable_test_input'], None
+                )
         self.assertNotEqual(config['account']['is_msp'], None)
         self.assertNotEqual(config['account']['block_list'], None)
+
+    def test_create_config_file_output_protocol(self):
+        config_filepath = 'tests/resources/config_files/file_output.yml'
+
+        config = Config.create_config(config_filepath)
+
+        server = config['servers'][0]
+
+        self.assertEqual(server['protocol'], 'FILE')
+        self.assertEqual(server['filepath'], '/tmp/duologsync-events.log')
+        self.assertEqual(config['dls_settings']['file_output']['queue_max_size'], 100)
+        self.assertEqual(config['dls_settings']['file_output']['max_retries'], 2)
+        self.assertEqual(config['dls_settings']['file_output']['retry_backoff_seconds'], 0.01)
+        self.assertEqual(config['dls_settings']['file_output']['enable_test_input'], True)
+
+    @patch('duologsync.program.Program.initiate_shutdown')
+    def test_create_config_file_output_missing_filepath(self, mock_initiate_shutdown):
+        config_filepath = 'tests/resources/config_files/file_output_missing_filepath.yml'
+
+        Config.create_config(config_filepath)
+
+        mock_initiate_shutdown.assert_called_once()
 
     def test_get_value_from_keys_normal(self):
         dictionary = {'level_one': '2FA',

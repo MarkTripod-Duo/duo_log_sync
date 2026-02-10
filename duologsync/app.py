@@ -20,18 +20,18 @@ import asyncio
 import logging
 import signal
 
-from duologsync.consumer.authlog_consumer import AuthlogConsumer
-from duologsync.producer.authlog_producer import AuthlogProducer
-from duologsync.consumer.telephony_consumer import TelephonyConsumer
-from duologsync.producer.telephony_producer import TelephonyProducer
-from duologsync.consumer.trustmonitor_consumer import TrustMonitorConsumer
-from duologsync.producer.trustmonitor_producer import TrustMonitorProducer
-from duologsync.consumer.activity_consumer import ActivityConsumer
-from duologsync.producer.activity_producer import ActivityProducer
-from duologsync.util import create_admin, check_for_specific_endpoint
-from duologsync.writer import Writer
 from duologsync.config import Config
+from duologsync.consumer.activity_consumer import ActivityConsumer
+from duologsync.consumer.authlog_consumer import AuthlogConsumer
+from duologsync.consumer.telephony_consumer import TelephonyConsumer
+from duologsync.consumer.trustmonitor_consumer import TrustMonitorConsumer
+from duologsync.producer.activity_producer import ActivityProducer
+from duologsync.producer.authlog_producer import AuthlogProducer
+from duologsync.producer.telephony_producer import TelephonyProducer
+from duologsync.producer.trustmonitor_producer import TrustMonitorProducer
 from duologsync.program import Program
+from duologsync.util import check_for_specific_endpoint, create_admin
+from duologsync.writer import Writer
 
 
 def main():
@@ -88,6 +88,9 @@ def main():
 
     # Run the Producers and Consumers
     asyncio.get_event_loop().run_until_complete(asyncio.gather(*tasks))
+    asyncio.get_event_loop().run_until_complete(
+            Writer.shutdown_writers(server_to_writer)
+            )
     asyncio.get_event_loop().close()
 
     if Program.is_logging_set():
@@ -222,6 +225,9 @@ def create_consumer_producer_pair(endpoint, writer, admin, child_account=None):
         Program.log(f"{endpoint} is not a recognized endpoint", logging.WARNING)
         del log_queue
         return []
+
+    if hasattr(writer, "register_log_type"):
+        writer.register_log_type(endpoint)
 
     tasks = [
         asyncio.ensure_future(producer.produce()),

@@ -43,6 +43,10 @@ class Config:
     CHECKPOINTING_DIRECTORY_DEFAULT = DIRECTORY_DEFAULT
     PROXY_SERVER_DEFAULT = ''
     PROXY_PORT_DEFAULT = 0
+    FILE_OUTPUT_QUEUE_MAX_SIZE_DEFAULT = 5000
+    FILE_OUTPUT_MAX_RETRIES_DEFAULT = 3
+    FILE_OUTPUT_RETRY_BACKOFF_SECONDS_DEFAULT = 0.2
+    FILE_OUTPUT_TEST_INPUT_ENABLED_DEFAULT = False
 
     GRACEFUL_RETRY_STATUS_CODES = (HTTPStatus.TOO_MANY_REQUESTS.value,)
 
@@ -114,6 +118,31 @@ class Config:
                         'type': 'number',
                         'default': PROXY_PORT_DEFAULT
 
+                            }
+                        }
+                    },
+                'file_output': {
+                        'type': 'dict',
+                        'default': {},
+                        'schema': {
+                                'queue_max_size': {
+                                        'type': 'integer',
+                                        'min': 1,
+                                        'default': FILE_OUTPUT_QUEUE_MAX_SIZE_DEFAULT
+                                        },
+                                'max_retries': {
+                                        'type': 'integer',
+                                        'min': 0,
+                                        'default': FILE_OUTPUT_MAX_RETRIES_DEFAULT
+                                        },
+                                'retry_backoff_seconds': {
+                                        'type': 'number',
+                                        'min': 0,
+                                        'default': FILE_OUTPUT_RETRY_BACKOFF_SECONDS_DEFAULT
+                                        },
+                                'enable_test_input': {
+                                        'type': 'boolean',
+                                        'default': FILE_OUTPUT_TEST_INPUT_ENABLED_DEFAULT
                     }
                 }
             }
@@ -125,10 +154,9 @@ class Config:
         'server',
         {
             'id': {'type': 'string', 'required': True, 'empty': False},
-            'hostname': {'type': 'string', 'required': True, 'empty': False},
+                'hostname': {'type': 'string', 'empty': False},
             'port': {
                 'type': 'integer',
-                'required': True,
                 'min': 0,
                 'max': 65535
             },
@@ -138,12 +166,20 @@ class Config:
                 'oneof': [
                     {
                         'allowed': ['TCPSSL'],
-                        'dependencies': ['cert_filepath']
+                            'dependencies': ['hostname', 'port', 'cert_filepath']
                     },
-                    {'allowed': ['TCP', 'UDP']}
+                        {
+                                'allowed': ['TCP', 'UDP'],
+                                'dependencies': ['hostname', 'port']
+                                },
+                        {
+                                'allowed': ['FILE'],
+                                'dependencies': ['filepath']
+                                }
                 ]
             },
-            'cert_filepath': {'type': 'string', 'empty': False}
+                'cert_filepath': {'type': 'string', 'empty': False},
+                'filepath': {'type': 'string', 'empty': False}
         })
 
     # List of servers and how DLS will communicate with them
@@ -334,6 +370,30 @@ class Config:
     def get_proxy_port(cls):
         """@return the proxy_port in config"""
         return cls.get_value(['dls_settings', 'proxy', 'proxy_port'])
+
+    @classmethod
+    def get_file_output_queue_max_size(cls):
+        """@return max queue size for local file output"""
+        return cls.get_value(['dls_settings', 'file_output', 'queue_max_size'])
+
+    @classmethod
+    def get_file_output_max_retries(cls):
+        """@return max write retry attempts for local file output"""
+        return cls.get_value(['dls_settings', 'file_output', 'max_retries'])
+
+    @classmethod
+    def get_file_output_retry_backoff_seconds(cls):
+        """@return base backoff for local file output retries"""
+        return cls.get_value(
+                ['dls_settings', 'file_output', 'retry_backoff_seconds']
+                )
+
+    @classmethod
+    def get_file_output_test_input_enabled(cls):
+        """@return whether test-input injection is enabled"""
+        return cls.get_value(
+                ['dls_settings', 'file_output', 'enable_test_input']
+                )
 
     @classmethod
     def create_config(cls, config_filepath):

@@ -58,6 +58,21 @@ version: '1.0.0'
     # Port for Http Proxy
     #proxy_port: 8080
 
+  # Settings specific to local FILE output protocol
+  #file_output:
+
+  # Maximum in-memory queue size before FILE output backlogs to disk
+  #queue_max_size: 5000
+
+  # Number of retries attempted before writing to FILE backlog
+  #max_retries: 3
+
+  # Base retry backoff (seconds); exponential backoff with jitter is used
+  #retry_backoff_seconds: 0.2
+
+  # Enable direct test automation injection for FILE writers
+#enable_test_input: False
+
 # List of servers and how DLS will communicate with them
 servers:
   
@@ -65,8 +80,7 @@ servers:
     # REQUIRED
   - id: ''
 
-    # Address of server to which Duo logs will be sent. If there is nothing that consumes these
-    # logs, they will be lost, since writing to local storage is not supported
+    # Address of server to which Duo logs will be sent when protocol is TCP/TCPSSL/UDP
     # REQUIRED
     hostname: ''
 
@@ -77,7 +91,7 @@ servers:
     port:
 
     # Transport protocol used to communicate with the server
-    # OPTIONS: TCP, TCPSSL, UDP
+    # OPTIONS: TCP, TCPSSL, UDP, FILE
     # REQUIRED
     protocol: ''
 
@@ -86,6 +100,10 @@ servers:
     # give path of .cert/.pem file that has keys
     # REQUIRED only if protocol is TCPSSL
     cert_filepath: ''
+
+    # Path to local output file for FILE protocol
+    # REQUIRED only if protocol is FILE
+    filepath: ''
 
 # To add another server, copy and paste the above, change the server name to
 # something unique and descriptive, and fill out the 3 (or 4) fields required
