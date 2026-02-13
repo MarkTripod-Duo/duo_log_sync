@@ -1,0 +1,23 @@
+[Unit]
+Description=Duo Log Sync - Duo Admin API log synchronization
+Documentation=https://github.com/duosecurity/duo_log_sync
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=duologsync
+Group=duologsync
+ExecStart=/usr/local/bin/duologsync /etc/duologsync/config.yml
+Restart=on-failure
+RestartSec=10
+StartLimitIntervalSec=600
+StartLimitBurst=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=duologsync
+Environment="PYTHONUNBUFFERED=1"
+EnvironmentFile=-/etc/default/duologsync
+
+[Install]
+WantedBy=multi-user.target

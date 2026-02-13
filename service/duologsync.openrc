@@ -1,0 +1,23 @@
+#!/sbin/openrc-run
+# OpenRC init script for Duo Log Sync
+
+description="Duo Log Sync - Duo Admin API log synchronization"
+
+: ${DUOLOGSYNC_CONFIG:="/etc/duologsync/config.yml"}
+: ${DUOLOGSYNC_USER:="duologsync"}
+: ${DUOLOGSYNC_GROUP:="duologsync"}
+
+command="/usr/local/bin/duologsync"
+command_args="${DUOLOGSYNC_CONFIG}"
+command_user="${DUOLOGSYNC_USER}:${DUOLOGSYNC_GROUP}"
+command_background=true
+pidfile="/run/${RC_SVCNAME}.pid"
+
+depend() {
+    need net
+    after firewall
+}
+
+start_pre() {
+    checkpath -f -o "${DUOLOGSYNC_USER}:${DUOLOGSYNC_GROUP}" "${pidfile}"
+}

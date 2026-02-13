@@ -32,16 +32,23 @@ dependencies = [
     "jsonschema>=4.0,<5",
 ]
 
+[project.optional-dependencies]
+windows = ["pywin32>=306"]
+
 [project.urls]
 Homepage = "https://github.com/duosecurity/duo_log_sync"
 
 [project.scripts]
 duologsync = "duologsync.app:main"
+duologsync-service = "duologsync.service:main"
 
 [tool.hatch.build.targets.sdist]
 include = [
     "duologsync/",
     "tests/",
+    "service/",
+    "install_service.sh",
+    "install_service.bat",
     "LICENSE",
     "README.md",
 ]

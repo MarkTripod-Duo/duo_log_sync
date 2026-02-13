@@ -36,9 +36,8 @@ from duologsync.writer import Writer
 
 def main():
     """
-    Kicks off DuoLogSync by setting important variables, creating and running
-    a Producer-Consumer pair for each log-type defined in a config file passed
-    to the program.
+    CLI entry point. Parses arguments, registers signal handlers, and
+    delegates to run().
     """
 
     arg_parser = argparse.ArgumentParser(
@@ -69,8 +68,22 @@ def main():
     # Handle shutting down the program via SIGTERM
     signal.signal(signal.SIGTERM, signal_handler)
 
-    # Create a config Dictionary from a YAML file located at args.ConfigPath
-    config = Config.create_config(args.ConfigPath)
+    run(args.ConfigPath)
+
+
+def run(config_path):
+    """
+    Core application logic. Loads config, creates producers/consumers, and
+    runs the asyncio event loop until shutdown.
+
+    This function is called by both the CLI entry point and the Windows
+    service. It does not register signal handlers — callers are responsible
+    for triggering Program.initiate_shutdown() when appropriate.
+
+    @param config_path  Path to the YAML configuration file
+    """
+
+    config = Config.create_config(config_path)
     Config.set_config(config)
 
     # Do extra checks for Trust Monitor support

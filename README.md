@@ -103,6 +103,81 @@ The command exits with code `0` on success or `1` if errors are found, making it
 
 ### Windows
 - On Windows operating systems, `duologsync` is installed in the `\Scripts\` folder under the Python installation in most cases when using pip. When using uv, the application is available via `uv run duologsync`.
+
+---
+
+## Running as a Service
+
+DuoLogSync can be installed as a system service so it starts automatically and runs in the background.
+
+### Linux (systemd, OpenRC, SysVinit)
+
+An installer script is included that auto-detects your init system and sets everything up:
+
+```
+sudo ./install_service.sh /path/to/config.yml
+```
+
+This will:
+- Create a `duologsync` system user
+- Copy your config to `/etc/duologsync/config.yml`
+- Install the appropriate service file for your init system
+- Enable and start the service
+
+**Managing the service (systemd):**
+```
+sudo systemctl status duologsync
+sudo systemctl stop duologsync
+sudo systemctl start duologsync
+sudo journalctl -u duologsync -f    # follow logs
+```
+
+**Managing the service (OpenRC):**
+```
+sudo rc-service duologsync status
+sudo rc-service duologsync stop
+sudo rc-service duologsync start
+```
+
+**Managing the service (SysVinit):**
+```
+sudo service duologsync status
+sudo service duologsync stop
+sudo service duologsync start
+```
+
+The service files are located in the `service/` directory and can be customized before installation. On systemd, environment overrides can be placed in `/etc/default/duologsync`.
+
+### Windows Service
+
+DuoLogSync can run as a native Windows service using `pywin32`. Install the extra dependency first:
+
+```
+pip install .[windows]
+```
+
+Then from an **elevated (Administrator) command prompt**:
+
+```
+duologsync-service install --config C:\path\to\config.yml
+duologsync-service start
+```
+
+Or use the convenience script:
+```
+install_service.bat C:\path\to\config.yml
+```
+
+**Managing the service:**
+```
+net stop DuoLogSync
+net start DuoLogSync
+duologsync-service remove    # uninstall
+duologsync-service debug     # run interactively for troubleshooting
+```
+
+The config file path is stored in the Windows registry. The service appears as "Duo Log Sync" in the Services management console.
+
 ---
 
 ## Logging
@@ -119,6 +194,7 @@ The command exits with code `0` on success or `1` if errors are found, making it
 - Enabling only certain endpoints through config file.
 - Choosing how logs are formatted (JSON, CEF).
 - Support for Linux, MacOS, Windows.
+- Install as a system service on Linux (systemd, OpenRC, SysVinit) and Windows.
 - Support for pulling logs using Accounts API (only for MSP accounts).
 - Graceful shutdown support via SIGINT (Ctrl-C) and SIGTERM signals.
 
