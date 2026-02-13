@@ -61,17 +61,17 @@ version: '1.0.0'
   # Settings specific to local FILE output protocol
   #file_output:
 
-  # Maximum in-memory queue size before FILE output backlogs to disk
-  #queue_max_size: 5000
+    # Maximum in-memory queue size before FILE output backlogs to disk
+    #queue_max_size: 5000
 
-  # Number of retries attempted before writing to FILE backlog
-  #max_retries: 3
+    # Number of retries attempted before writing to FILE backlog
+    #max_retries: 3
 
-  # Base retry backoff (seconds); exponential backoff with jitter is used
-  #retry_backoff_seconds: 0.2
+    # Base retry backoff (seconds); exponential backoff with jitter is used
+    #retry_backoff_seconds: 0.2
 
-  # Enable direct test automation injection for FILE writers
-#enable_test_input: False
+    # Enable direct test automation injection for FILE writers
+    #enable_test_input: False
 
 # List of servers and how DLS will communicate with them
 servers:

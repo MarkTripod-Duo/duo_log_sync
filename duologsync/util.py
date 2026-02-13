@@ -123,7 +123,8 @@ def get_log_offset(
 
         # Most likely, the checkpoint file doesn't exist
         except OSError as os_error:
-            error_code, error_message = getattr(os_error, "args")
+            error_code = getattr(os_error, "errno", None)
+            error_message = getattr(os_error, "strerror", str(os_error))
             file_name = getattr(os_error, "filename", None)
             display_offset = log_offset
             if log_type in MILLISECOND_BASED_LOG_TYPES:
@@ -216,7 +217,7 @@ def check_for_specific_endpoint(endpoint, config):
     endpoint_server_mappings = config.get("account", {}).get(
         "endpoint_server_mappings", {}
     )
-    endpoints_to_server = [e["endpoints"] for e in endpoint_server_mappings]
+    endpoints_to_server = [e.get("endpoints", []) for e in endpoint_server_mappings]
 
     for endpoints in endpoints_to_server:
         if endpoint in endpoints:

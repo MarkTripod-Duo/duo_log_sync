@@ -42,15 +42,27 @@ def main():
     """
 
     arg_parser = argparse.ArgumentParser(
-        prog="duologsync", description="Path to config file"
+        prog="duologsync",
+        description="Fetch logs from Duo endpoints and ingest them to SIEMs",
     )
     arg_parser.add_argument(
         "ConfigPath",
         metavar="config-path",
         type=str,
-        help="Config to start application",
+        help="Path to the YAML configuration file",
+    )
+    arg_parser.add_argument(
+        "--validate",
+        action="store_true",
+        default=False,
+        help="Validate the configuration file and exit without running",
     )
     args = arg_parser.parse_args()
+
+    # If --validate was requested, perform validation and exit
+    if args.validate:
+        _validate_and_exit(args.ConfigPath)
+        return
 
     # Handle shutting down the program via Ctrl-C
     signal.signal(signal.SIGINT, signal_handler)
@@ -98,6 +110,31 @@ def main():
             f"DuoLogSync: shutdown successfully. Check "
             f"{Config.get_log_filepath()} for program logs"
         )
+
+
+def _validate_and_exit(config_path):
+    """
+    Validate the config file at config_path and print results to the
+    console. Exits with code 0 on success, 1 on validation failure.
+
+    @param config_path  Path to the YAML configuration file
+    """
+    import sys
+
+    errors, warnings = Config.validate_config(config_path)
+
+    if warnings:
+        for warning in warnings:
+            print(f"WARNING: {warning}")
+
+    if errors:
+        for error in errors:
+            print(f"ERROR: {error}")
+        print(f"\nValidation FAILED for '{config_path}'")
+        sys.exit(1)
+    else:
+        print(f"Validation OK: '{config_path}' is a valid configuration file")
+        sys.exit(0)
 
 
 def signal_handler(signal_number, stack_frame):

@@ -18,6 +18,11 @@ from duologsync.config import Config
 from duologsync.program import Program
 
 
+def _extract_error_info(error):
+    """Safely extract (error_code, error_message) from an exception."""
+    return getattr(error, "errno", None), getattr(error, "strerror", str(error))
+
+
 class DatagramProtocol(asyncio.DatagramProtocol):
     """
     DLS implementation of Asyncio's abstract DatagramProtocol class. This is
@@ -38,7 +43,7 @@ class DatagramProtocol(asyncio.DatagramProtocol):
 
         if exc:
             shutdown_reason = (
-                f"UDP connection with host-{self.host} and port-{self.port}"
+                f"UDP connection with host-{self.host} and port-{self.port} "
                 f"was closed for the following reason [{exc}]"
             )
 
@@ -95,10 +100,9 @@ class LocalFileWriter:
             try:
                 directory.mkdir(parents=True, exist_ok=True)
             except OSError as error:
-                error_code, error_message = getattr(error, "args", (None, error))
                 raise OSError(
                         f"failed to create directory '{directory}' for FILE output "
-                        f"error_message: {error_message} error_code: {error_code}"
+                        f"error_message: {error.strerror} error_code: {error.errno}"
                         ) from error
 
         if not directory.is_dir():
@@ -107,11 +111,6 @@ class LocalFileWriter:
                     )
 
         LocalFileWriter._validate_directory_writable(directory)
-
-        if normalized_path.is_symlink():
-            raise ValueError(
-                    f"filepath '{normalized_path}' cannot be a symlink for FILE output"
-                    )
 
         if normalized_path.is_dir():
             raise IsADirectoryError(
@@ -128,10 +127,9 @@ class LocalFileWriter:
             with NamedTemporaryFile(dir=str(directory), prefix=".dls_perm_", delete=True):
                 pass
         except OSError as error:
-            error_code, error_message = getattr(error, "args", (None, error))
             raise PermissionError(
                     f"directory '{directory}' is not writable for FILE output "
-                    f"error_message: {error_message} error_code: {error_code}"
+                    f"error_message: {error.strerror} error_code: {error.errno}"
                     ) from error
 
     @staticmethod
@@ -143,10 +141,9 @@ class LocalFileWriter:
             with filepath.open("ab"):
                 pass
         except OSError as error:
-            error_code, error_message = getattr(error, "args", (None, error))
             raise PermissionError(
                     f"filepath '{filepath}' is not writable for FILE output "
-                    f"error_message: {error_message} error_code: {error_code}"
+                    f"error_message: {error.strerror} error_code: {error.errno}"
                     ) from error
 
     def register_log_type(self, log_type):
@@ -238,21 +235,46 @@ class LocalFileWriter:
             self._initialized_log_types.add(log_type)
 
     async def _process_queue(self):
-        while True:
-            item = await self.queue.get()
+        try:
+            while True:
+                item = await self.queue.get()
 
-            if item is self._STOP:
-                self.queue.task_done()
-                break
+                if item is self._STOP:
+                    self.queue.task_done()
+                    break
 
-            log_type, data = item
-            write_success, should_backlog = await self._write_with_retries(
-                    data, log_type
+                log_type, data = item
+                try:
+                    write_success, should_backlog = await self._write_with_retries(
+                            data, log_type
+                            )
+                    if not write_success and should_backlog:
+                        await self._append_backlog(log_type, data)
+                except Exception as error:
+                    Program.log(
+                        f"FILE writer: unexpected error processing queue item "
+                        f"for '{self.filepath}' "
+                        f"error_type: {type(error).__name__} "
+                        f"error_message: {error}",
+                        logging.ERROR,
                     )
-            if not write_success and should_backlog:
-                await self._append_backlog(log_type, data)
 
-            self.queue.task_done()
+                self.queue.task_done()
+        except asyncio.CancelledError:
+            Program.log(
+                f"FILE writer: queue processor cancelled for '{self.filepath}'",
+                logging.WARNING,
+            )
+        except Exception as error:
+            Program.log(
+                f"FILE writer: queue processor crashed for '{self.filepath}' "
+                f"error_type: {type(error).__name__} "
+                f"error_message: {error}",
+                logging.ERROR,
+            )
+            Program.initiate_shutdown(
+                f"FILE writer queue processor crashed: {error}"
+            )
 
     async def _write_with_retries(self, data, log_type):
         attempts = self.max_retries + 1
@@ -263,7 +285,6 @@ class LocalFileWriter:
                         )
                 return True, False
             except OSError as error:
-                error_code, error_message = getattr(error, "args", (None, error))
                 if self._is_disk_full_error(error):
                     self._shutdown_for_disk_full(log_type, error)
                     return False, False
@@ -271,20 +292,22 @@ class LocalFileWriter:
                 if attempt == attempts:
                     Program.log(
                             f"{log_type} consumer: exhausted FILE write retries for '{self.filepath}' error_message: "
-                            f"{error_message} error_code: {error_code}",
+                            f"{error.strerror} error_code: {error.errno}",
                             logging.ERROR,
                             )
                     return False, True
 
                 Program.log(
                         f"{log_type} consumer: FILE write failed (attempt {attempt}/{attempts}) for '"
-                        f"{self.filepath}', retrying error_message: {error_message} error_code: {error_code}",
+                        f"{self.filepath}', retrying error_message: {error.strerror} error_code: {error.errno}",
                         logging.WARNING,
                         )
                 backoff = (self.retry_backoff_seconds * (2 ** (attempt - 1))) + random.uniform(0, 0.1)
                 await asyncio.sleep(backoff)
 
-        return False, True
+        # All retry attempts were handled inside the loop; this is unreachable
+        # unless max_retries is misconfigured to a negative value.
+        return False, True  # pragma: no cover
 
     def _write_to_file(self, data):
         flags = os.O_WRONLY | os.O_CREAT | os.O_APPEND
@@ -304,38 +327,37 @@ class LocalFileWriter:
                 except OSError:
                     pass
 
-        try:
-            self.filepath.chmod(0o600)
-        except OSError:
-            # Best-effort on platforms/filesystems that don't support this mode.
-            pass
-
     async def _append_backlog(self, log_type, data):
-        await asyncio.get_event_loop().run_in_executor(
+        error = await asyncio.get_event_loop().run_in_executor(
                 None, self._append_backlog_sync, log_type, data
                 )
+        if error is not None:
+            if self._is_disk_full_error(error):
+                self._shutdown_for_disk_full(log_type, error)
+            else:
+                Program.log(
+                        f"{log_type} consumer: failed to write FILE backlog "
+                        f"'{self._backlog_path(log_type)}' "
+                        f"error_message: {error.strerror} error_code: {error.errno}",
+                        logging.ERROR,
+                        )
+        else:
+            Program.log(
+                    f"{log_type} consumer: stored FILE write failure in backlog "
+                    f"'{self._backlog_path(log_type)}'",
+                    logging.WARNING,
+                    )
 
     def _append_backlog_sync(self, log_type, data):
+        """Write data to backlog file. Returns the OSError on failure, None on success."""
         backlog_path = self._backlog_path(log_type)
         try:
             with backlog_path.open("ab") as backlog_file:
                 backlog_file.write(data)
         except OSError as error:
-            error_code, error_message = getattr(error, "args", (None, error))
-            if self._is_disk_full_error(error):
-                self._shutdown_for_disk_full(log_type, error)
-                return
-            Program.log(
-                    f"{log_type} consumer: failed to write FILE backlog '{backlog_path}' error_message: "
-                    f"{error_message} error_code: {error_code}",
-                    logging.ERROR,
-                    )
-            return
+            return error
 
-        Program.log(
-                f"{log_type} consumer: stored FILE write failure in backlog '{backlog_path}'",
-                logging.WARNING,
-                )
+        return None
 
     async def _replay_backlog(self, log_type):
         backlog_path = self._backlog_path(log_type)
@@ -395,10 +417,9 @@ class LocalFileWriter:
                     return False
 
         except OSError as error:
-            error_code, error_message = getattr(error, "args", (None, error))
             Program.log(
                     f"{log_type} consumer: failed to read FILE backlog replay file '{replay_path}' error_message: "
-                    f"{error_message} error_code: {error_code}",
+                    f"{error.strerror} error_code: {error.errno}",
                     logging.ERROR,
                     )
             return False
@@ -409,28 +430,17 @@ class LocalFileWriter:
         if hasattr(errno, "EDQUOT"):
             disk_full_codes.add(errno.EDQUOT)
 
-        error_errno = getattr(error, "errno", None)
-        if error_errno is None and getattr(error, "args", None):
-            first_arg = error.args[0]
-            if isinstance(first_arg, int):
-                error_errno = first_arg
-
-        return error_errno in disk_full_codes
+        return getattr(error, "errno", None) in disk_full_codes
 
     def _shutdown_for_disk_full(self, log_type, error):
-        error_code = getattr(error, "errno", None)
-        error_message = getattr(error, "strerror", None)
-        if not error_message and getattr(error, "args", None):
-            error_message = error.args[1] if len(error.args) > 1 else str(error)
-
         Program.log(
                 f"{log_type} consumer: disk full detected for FILE output '{self.filepath}' error_message: "
-                f"{error_message} error_code: {error_code}",
+                f"{error.strerror} error_code: {error.errno}",
                 logging.ERROR,
                 )
         Program.initiate_shutdown(
                 f"{log_type} consumer: disk full for FILE output '{self.filepath}' "
-                f"error_message: {error_message} error_code: {error_code}"
+                f"error_message: {error.strerror} error_code: {error.errno}"
                 )
 
     @staticmethod
@@ -503,8 +513,13 @@ class Writer:
                 # and we need to handle it
                 # Store the failed UDP ingestion logs in a file and log the error
                 # message to the console
-                error_code, error_message = getattr(error, "args")
-                Program.log(f"{log_type} producer: error while sending data to {self.hostname}:{self.port} error_message: {error_message} error_code: {error_code}", logging.WARNING)
+                error_code, error_message = _extract_error_info(error)
+                Program.log(
+                    f"{log_type} consumer: UDP send failed to "
+                    f"{self.hostname}:{self.port} "
+                    f"error_message: {error_message} error_code: {error_code}",
+                    logging.WARNING,
+                )
                 util.store_failed_udp_ingestion_logs(
                     log_type,
                     Config.get_checkpoint_dir(),
@@ -515,8 +530,21 @@ class Writer:
                 return
             await self.writer.write(data, log_type)
         else:
-            await self.writer.write(data)
-            await self.writer.drain()
+            # TCP/TCPSSL — propagate connection errors to the consumer
+            # for graceful shutdown handling
+            try:
+                self.writer.write(data)
+                await self.writer.drain()
+            except (OSError, ConnectionError, asyncio.TimeoutError) as error:
+                error_code, error_message = _extract_error_info(error)
+                Program.log(
+                    f"{log_type} consumer: TCP write/drain failed to "
+                    f"{self.hostname}:{self.port} "
+                    f"error_type: {type(error).__name__} "
+                    f"error_message: {error_message} error_code: {error_code}",
+                    logging.ERROR,
+                )
+                raise
 
     def register_log_type(self, log_type):
         if self.protocol == "FILE" and self.writer:
@@ -546,10 +574,25 @@ class Writer:
             return
 
         # TCP/TCPSSL writer
-        self.writer.close()
-        wait_closed = getattr(self.writer, "wait_closed", None)
-        if wait_closed:
-            await wait_closed()
+        try:
+            self.writer.close()
+            wait_closed = getattr(self.writer, "wait_closed", None)
+            if wait_closed:
+                await asyncio.wait_for(wait_closed(), timeout=5.0)
+        except asyncio.TimeoutError:
+            Program.log(
+                f"DuoLogSync: TCP close to {self.hostname}:{self.port} "
+                f"timed out after 5 seconds, proceeding with shutdown",
+                logging.WARNING,
+            )
+        except OSError as error:
+            error_code, error_message = _extract_error_info(error)
+            Program.log(
+                f"DuoLogSync: error closing TCP connection to "
+                f"{self.hostname}:{self.port} "
+                f"error_message: {error_message} error_code: {error_code}",
+                logging.WARNING,
+            )
 
     async def create_writer(self, host, port, cert_filepath, filepath=None):
         """
@@ -612,7 +655,7 @@ class Writer:
 
         # Failed to open the certificate file
         except FileNotFoundError as fnf_error:
-            error_code, error_message = getattr(fnf_error, "args")
+            error_code, error_message = _extract_error_info(fnf_error)
             shutdown_reason = f"certificate file '{cert_filepath}' could not be opened due to error: {error_message} error_code: {error_code}"
             help_message = f"make sure that certificate file '{cert_filepath}' to establish SSL connection is correct."
 
@@ -623,7 +666,7 @@ class Writer:
         # If an invalid hostname or port number is given or simply failed to
         # connect using the host and port given
         except (gaierror, OSError) as error:
-            error_code, error_message = getattr(error, "args")
+            error_code, error_message = _extract_error_info(error)
             shutdown_reason = f"error while connecting to {host}:{port} error_message: {error_message} error_code: {error_code}"
 
         # An error did not occur and the writer was successfully created

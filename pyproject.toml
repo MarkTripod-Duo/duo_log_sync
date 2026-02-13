@@ -1,0 +1,81 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "duologsync"
+version = "2.5.0"
+description = "Ingest + sync logs from the Duo Admin API into another system."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.8"
+authors = [
+    { name = "Duo Security, Inc.", email = "support@duosecurity.com" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+]
+dependencies = [
+    "duo_client>=5.5.0,<6",
+    "PyYAML>=6.0.1,<7",
+    "jsonschema>=4.0,<5",
+]
+
+[project.urls]
+Homepage = "https://github.com/duosecurity/duo_log_sync"
+
+[project.scripts]
+duologsync = "duologsync.app:main"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "duologsync/",
+    "tests/",
+    "LICENSE",
+    "README.md",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["duologsync"]
+
+[tool.pytest.ini_options]
+addopts = [
+    "--junit-xml=tests/TEST-duo_log_sync.xml",
+    "--color=yes",
+    "-vvv",
+]
+
+[tool.flake8]
+ignore = [
+    "W503",
+    "E203",
+    "E261",
+    "E262",
+    "E265",
+    "E266",
+    "E302",
+    "E303",
+    "E305",
+    "E501",
+    "E999",
+    "F821",
+    "F841",
+    "F401",
+    "F403",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=7",
+]

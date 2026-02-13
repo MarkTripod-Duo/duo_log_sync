@@ -312,3 +312,77 @@ class TestConfig(TestCase):
 
         self.assertEqual(value_one, None)
         self.assertEqual(value_two, None)
+
+    # --- validate_config tests ---
+
+    def test_validate_config_valid_file(self):
+        config_filepath = 'tests/resources/config_files/standard.yml'
+        errors, warnings = Config.validate_config(config_filepath)
+        self.assertEqual(errors, [])
+        self.assertEqual(warnings, [])
+
+    def test_validate_config_bad_filepath(self):
+        errors, warnings = Config.validate_config('nonexistent/path.yml')
+        self.assertEqual(len(errors), 1)
+        self.assertIn('Failed to open config file', errors[0])
+
+    def test_validate_config_bad_yaml(self):
+        config_filepath = 'tests/resources/config_files/bad_yaml.yml'
+        errors, warnings = Config.validate_config(config_filepath)
+        self.assertEqual(len(errors), 1)
+        self.assertIn('Failed to parse YAML', errors[0])
+
+    def test_validate_config_bad_config(self):
+        config_filepath = 'tests/resources/config_files/bad_config.yml'
+        errors, warnings = Config.validate_config(config_filepath)
+        self.assertTrue(len(errors) > 0)
+        self.assertIn('Schema validation error', errors[0])
+
+    def test_validate_config_bad_values(self):
+        config_filepath = 'tests/resources/config_files/bad_values.yml'
+        errors, warnings = Config.validate_config(config_filepath)
+        self.assertTrue(len(errors) > 0)
+
+    def test_validate_config_file_output_missing_filepath(self):
+        config_filepath = 'tests/resources/config_files/file_output_missing_filepath.yml'
+        errors, warnings = Config.validate_config(config_filepath)
+        self.assertTrue(len(errors) > 0)
+
+    def test_validate_config_no_defaults_set(self):
+        config_filepath = 'tests/resources/config_files/no_defaults_set.yml'
+        errors, warnings = Config.validate_config(config_filepath)
+        self.assertEqual(errors, [])
+
+    def test_validate_config_low_timeout_warning(self):
+        """Config with api timeout below minimum should produce a warning."""
+        import tempfile
+        import os
+
+        config_content = """
+version: "1.0.0"
+servers:
+  - id: "test"
+    hostname: "localhost"
+    port: 8888
+    protocol: "TCP"
+account:
+  ikey: "TESTKEY123"
+  skey: "testsecretkey123"
+  hostname: "api-test.duosecurity.com"
+  endpoint_server_mappings:
+    - endpoints: ["auth"]
+      server: "test"
+dls_settings:
+  api:
+    timeout: 10
+"""
+        fd, tmppath = tempfile.mkstemp(suffix='.yml')
+        try:
+            with os.fdopen(fd, 'w') as f:
+                f.write(config_content)
+            errors, warnings = Config.validate_config(tmppath)
+            self.assertEqual(errors, [])
+            self.assertEqual(len(warnings), 1)
+            self.assertIn('below the minimum', warnings[0])
+        finally:
+            os.unlink(tmppath)

@@ -69,12 +69,24 @@ class Consumer:
                     # All the logs were written successfully
                     successful_write = True
 
-                # Specifically watch out for errno 32 - Broken pipe. This means
-                # that the connect established by writer was reset or shutdown.
-                except BrokenPipeError as broken_pipe_error:
-                    error_code, error_message = getattr(broken_pipe_error, "args")
-                    shutdown_reason = f"{self.log_type} consumer: [{broken_pipe_error} error_code: {error_code}]"
-                    Program.log(f"{self.log_type} consumer: connection to the destination server was reset or shutdown", logging.ERROR)
+                # Handle connection failures: broken pipe, connection reset,
+                # connection aborted, OS-level socket errors, and timeouts
+                except (BrokenPipeError, ConnectionResetError,
+                        ConnectionAbortedError, OSError) as conn_error:
+                    error_code = getattr(conn_error, "errno", None)
+                    error_message = getattr(conn_error, "strerror", str(conn_error))
+                    shutdown_reason = (
+                        f"{self.log_type} consumer: connection error "
+                        f"error_type: {type(conn_error).__name__} "
+                        f"error_message: {error_message} "
+                        f"error_code: {error_code}"
+                    )
+                    Program.log(
+                        f"{self.log_type} consumer: connection to the "
+                        f"destination server was reset or shutdown "
+                        f"({type(conn_error).__name__}: {conn_error})",
+                        logging.ERROR,
+                    )
                     Program.initiate_shutdown(shutdown_reason)
 
                 finally:

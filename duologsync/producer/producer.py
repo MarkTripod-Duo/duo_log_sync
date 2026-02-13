@@ -93,16 +93,30 @@ class Producer:
         """
         Handle an OS error gracefully by logging the error and returning a string to indicate that the producer should shut down.
         """
-        error_code, error_message = getattr(os_error, "args")
+        error_code = getattr(os_error, "errno", None)
+        error_message = getattr(os_error, "strerror", str(os_error))
         file_name = getattr(os_error, "filename", None)
+        Program.log(
+            f"{self.log_type} producer: OS error "
+            f"error_type: {type(os_error).__name__} "
+            f"error_message: {error_message} error_code: {error_code} "
+            f"file_name: {file_name}",
+            logging.ERROR,
+        )
         return f"{self.log_type} producer: [{error_message} error_code: {error_code} file_name: {file_name}]"
 
     def handle_address_info_error(self, gai_error: gaierror):
         """
         Handle an address info error gracefully by logging the error and returning a string to indicate that the producer should shut down.
         """
-        error_code, error_message = getattr(gai_error, "args")
-        Program.log(f"{self.log_type} producer: make sure that the host information details provider in the configuration file {Config.get_config_file_path()} is correct", logging.ERROR)
+        error_code = getattr(gai_error, "errno", None)
+        error_message = getattr(gai_error, "strerror", str(gai_error))
+        Program.log(
+            f"{self.log_type} producer: address resolution failed "
+            f"error_message: {error_message} error_code: {error_code} "
+            f"config_file: {Config.get_config_file_path()}",
+            logging.ERROR,
+        )
         return f"{self.log_type} producer: [{error_message} error_code: {error_code}]"
 
     def handle_runtime_error_gracefully(self, runtime_error: RuntimeError):
@@ -113,7 +127,7 @@ class Producer:
         """
         http_error_code = getattr(runtime_error, "status", None)
         error_data = getattr(runtime_error, "data", None)
-        error_code = error_data['code'] if error_data else None
+        error_code = error_data.get('code') if isinstance(error_data, dict) else None
 
         if self.eligible_for_retry(http_error_code):
             Program.log(

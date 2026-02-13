@@ -1,4 +1,4 @@
-Duo Log Sync (v2.4.1)
+Duo Log Sync (v2.5.0)
 ===================
 
 [![Issues](https://img.shields.io/github/issues/duosecurity/duo_log_sync)](https://github.com/duosecurity/duo_log_sync/issues)
@@ -27,9 +27,7 @@ MSP customers gathering logs from linked accounts should create an **Accounts AP
 
 ### Set Up a Receiving Server
 
-Before running DuoLogSync, you must have a server configured to receive the logs. DuoLogSync sends logs over TCP,
-TCPSSL (TCP with SSL encryption), or UDP to a specified hostname and port, or writes logs to local files using FILE
-protocol.
+Before running DuoLogSync, you must have a server configured to receive the logs. DuoLogSync sends logs over TCP, TCPSSL (TCP with SSL encryption), or UDP to a specified hostname and port, or writes logs to local files using FILE protocol.
 
 Common receiving systems include:
 
@@ -37,28 +35,74 @@ Common receiving systems include:
 - Syslog servers
 - Log aggregators
 
-Ensure the `hostname` and `port` in your `config.yml` match your receiving server's configuration. Refer to your SIEM or
-log server documentation for setup instructions.
+Ensure the `hostname` and `port` in your `config.yml` match your receiving server's configuration. Refer to your SIEM or log server documentation for setup instructions.
+
 For FILE output, ensure the configured destination directory is accessible to the DuoLogSync process.
 
 ## Installation
 
-- Make sure you are running Python 3+ with `python --version`.
-- Clone this GitHub repository and navigate to the `duo_log_sync` folder.
-- Ensure you have "setuptools" by running `pip3 install setuptools`.
-- Install dependencies by running `pip install -r requirements.txt`.
-- Install `duologsync` by running `python/python3 setup.py install`. 
-- Refer to the `Configuration` section below. You will need to create a `config.yml` file and fill out credentials for the adminapi in the duoclient section as well as other parameters if necessary.
-- Run the application using `duologsync <complete/path/to/config.yml>`.
-- If a new version of DLS is downloaded from GitHub, run the setup command again to reinstall `duologsync` for changes to take effect.
+### Using uv (Recommended)
+
+[uv](https://docs.astral.sh/uv/) is the recommended way to install and manage DuoLogSync.
+
+1. Make sure you have Python 3.8 or later: `python --version`.
+2. [Install uv](https://docs.astral.sh/uv/getting-started/installation/) if you haven't already.
+3. Clone this GitHub repository and navigate to the `duo_log_sync` folder.
+4. Install dependencies and set up the virtual environment:
+   ```
+   uv sync
+   ```
+5. Refer to the `Configuration` section below. You will need to create a `config.yml` file and fill out credentials for the Admin API in the duoclient section as well as other parameters if necessary.
+6. Run the application:
+   ```
+   uv run duologsync <complete/path/to/config.yml>
+   ```
+7. If a new version of DLS is downloaded from GitHub, run `uv sync` again to update dependencies and reinstall.
+
+### Using pip (Alternative)
+
+1. Make sure you are running Python 3.8 or later: `python --version`.
+2. Clone this GitHub repository and navigate to the `duo_log_sync` folder.
+3. Install `duologsync` and its dependencies:
+   ```
+   pip install .
+   ```
+4. Refer to the `Configuration` section below. You will need to create a `config.yml` file and fill out credentials for the Admin API in the duoclient section as well as other parameters if necessary.
+5. Run the application:
+   ```
+   duologsync <complete/path/to/config.yml>
+   ```
+6. If a new version of DLS is downloaded from GitHub, run `pip install .` again to reinstall `duologsync` for changes to take effect.
 
 ### Compatibility
 
-- Duologsync is compatible with Python versions `3.6`, `3.7`, `3.8`, `3.9`, `3.10`, `3.11`, `3.12`, and `3.13`.
+- Duologsync is compatible with Python versions `3.8`, `3.9`, `3.10`, `3.11`, `3.12`, and `3.13`.
 - Duologsync is officially supported on Linux, MacOS, and Windows systems.
 
+### Validating Your Configuration
+
+Before running DuoLogSync, you can validate your configuration file to check for errors:
+
+```
+duologsync --validate <complete/path/to/config.yml>
+```
+
+Or with uv:
+
+```
+uv run duologsync --validate <complete/path/to/config.yml>
+```
+
+This checks that the file:
+- Can be opened and read
+- Contains valid YAML syntax
+- Passes schema validation (required fields, correct types, valid values)
+- Flags warnings for settings that will be adjusted at runtime (e.g., API timeout below minimum)
+
+The command exits with code `0` on success or `1` if errors are found, making it suitable for use in CI/CD pipelines and pre-deployment checks.
+
 ### Windows
-- On Windows operating systems, `duologsync` is installed in the `\scripts\` folder under the Python installation in most cases.
+- On Windows operating systems, `duologsync` is installed in the `\Scripts\` folder under the Python installation in most cases when using pip. When using uv, the application is available via `uv run duologsync`.
 ---
 
 ## Logging
@@ -88,7 +132,7 @@ For FILE output, ensure the configured destination directory is accessible to th
 
 ## System Requirements
 
-- Duo Log Sync must be run a system set to the UTC/GMT Timezone
+- Duo Log Sync must be run on a system set to the UTC/GMT Timezone
 
 ## Configuration
 
@@ -131,15 +175,12 @@ For FILE output, ensure the configured destination directory is accessible to th
 
 - FILE output writes logs asynchronously to avoid blocking producers/consumers.
 - If the output directory in `filepath` does not exist, DuoLogSync attempts to create it.
-- DuoLogSync validates write permissions by performing real write probes on the destination directory and existing
-  output file.
+- DuoLogSync validates write permissions by performing real write probes on the destination directory and existing output file.
 - On transient file write failures, retries use exponential backoff according to `max_retries` and
   `retry_backoff_seconds`.
-- If retries are exhausted (and the failure is not disk full), logs are written to checkpoint-directory backlog files
-  named `<log_type>_file_failed_ingestion_logs.txt`.
+- If retries are exhausted (and the failure is not disk full), logs are written to checkpoint-directory backlog files named `<log_type>_file_failed_ingestion_logs.txt`.
 - On startup, existing FILE backlog files are replayed before live writes and resumed if replay was interrupted.
-- If disk-full conditions are detected (`ENOSPC`/quota), retries are skipped and DuoLogSync initiates shutdown
-  immediately with an explicit error message and code.
+- If disk-full conditions are detected (`ENOSPC`/quota), retries are skipped and DuoLogSync initiates shutdown immediately with an explicit error message and code.
 
 ### Upgrading Your Config File
 - From time to time new features and fields will be added to the config file. Updating of the config file is mandatory when config changes are made. To make this easier, Duo has created a script called [`upgrade_config.py`](./upgrade_config.py) which will automatically update your old config for you.

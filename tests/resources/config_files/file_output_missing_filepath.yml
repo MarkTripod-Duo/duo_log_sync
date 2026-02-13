@@ -1,0 +1,11 @@
+version: '1.0.0'
+servers:
+  - id: 'file server'
+    protocol: 'FILE'
+account:
+  ikey: 'AAA101020K12K1K23'
+  skey: 'jyJKYAGJKAYGDKJgyJygFUg9F9gyFuo9'
+  hostname: 'api-test.first.duosecurity.com'
+  endpoint_server_mappings:
+    - endpoints: ['auth']
+      server: 'file server'
