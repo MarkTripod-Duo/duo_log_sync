@@ -15,10 +15,11 @@ if [ -n "${CI_REGISTRY_IMAGE}" ]; then
     IMAGE_TAG="${CI_REGISTRY_IMAGE}/${IMAGE_TAG}"
 fi
 
-# If we're building in Gitlab, the project root is predefined
-if ! SRC=$(git rev-parse --show-toplevel) 2>/dev/null; then
-    SRC="${CI_PROJECT_DIR}"
-fi
+# Usage of bash substring expansion (${parameter:-word}) such that if 
+# 'parameter' (CI_PROJECT_DIR) does not have a value, 'word' will be used. 
+# In this case, 'word' is a git command which returns the root / top-level 
+# directory for the current git repository
+SRC="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel)}"
 
 # Our Dockerfile uses experimental buildkit syntax
 export DOCKER_BUILDKIT=1

@@ -15,7 +15,7 @@ EXIT_STATUS=$ERROR
 # 'parameter' (CI_PROJECT_DIR) does not have a value, 'word' will be used. 
 # In this case, 'word' is a git command which returns the root / top-level 
 # directory for the current git repository
-CI_PROJECT_DIR="${CI_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"
+CI_PROJECT_DIR="${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel)}"
 
 # Add directory to stack, allowing a person to run this test from anywhere 
 # in the project strucutre and easily returning back to the original directory
