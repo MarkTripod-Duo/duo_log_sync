@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Duo Admin API documentation
+    url: https://duo.com/docs/adminapi
+    about: "Reference for credentials, endpoints, and permissions. Duo does not support this fork."
+  - name: Report a security vulnerability
+    url: https://github.com/MarkTripod-Duo/duo_log_sync/security/advisories/new
+    about: "Please report vulnerabilities privately — do not open a public issue."

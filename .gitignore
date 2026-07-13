@@ -140,7 +140,9 @@ dmypy.json
 .pytest_cache/
 
 .DS_Store
-config.yml
+# The user's Duo config at the repo root only — anchored so it does not match
+# .github/ISSUE_TEMPLATE/config.yml or other config.yml files in the tree.
+/config.yml
 
 # Claude Code local session / worktree artifacts
 .claude/

@@ -1,0 +1,99 @@
+name: Bug report
+description: Report a problem with Duo Log Sync (this unofficial fork)
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report.
+
+        ⚠️ **Do not report security vulnerabilities here.** Please follow the
+        [security policy](../security/policy) instead.
+
+        This is an independent fork and is **not supported by Duo Security**.
+  - type: input
+    id: version
+    attributes:
+      label: Duo Log Sync version
+      description: Output of `duologsync --version` or the value in `duologsync/__version__.py`.
+      placeholder: "2.5.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - macOS
+        - Windows
+    validations:
+      required: true
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: Install method
+      options:
+        - uv
+        - pip
+        - System service (systemd/OpenRC/SysVinit/launchd/Windows)
+    validations:
+      required: true
+  - type: dropdown
+    id: protocol
+    attributes:
+      label: Output protocol
+      description: Which server protocol were you using?
+      options:
+        - TCP
+        - TCPSSL
+        - UDP
+        - FILE
+        - Not applicable
+    validations:
+      required: false
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Configure ...
+        2. Run `duologsync config.yml`
+        3. See error ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Paste program logs (default `/tmp/duologsync.log`). This is automatically formatted as code.
+      render: shell
+    validations:
+      required: false
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration (redacted)
+      description: Your `config.yml` with all secrets removed.
+      render: yaml
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: I removed my `ikey`, `skey`, and any other secrets from everything pasted above.
+          required: true
+        - label: This is not a security vulnerability (those go through the security policy).
+          required: true

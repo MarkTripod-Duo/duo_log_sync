@@ -61,6 +61,9 @@ For FILE output, ensure the configured destination directory is accessible to th
 
 ## Installation
 
+<details>
+<summary><b>Installation options (uv, pip, Windows) — click to expand</b></summary>
+
 ### Using uv (Recommended)
 
 [uv](https://docs.astral.sh/uv/) is the recommended way to install and manage DuoLogSync.
@@ -123,9 +126,14 @@ The command exits with code `0` on success or `1` if errors are found, making it
 ### Windows
 - On Windows operating systems, `duologsync` is installed in the `\Scripts\` folder under the Python installation in most cases when using pip. When using uv, the application is available via `uv run duologsync`.
 
+</details>
+
 ---
 
 ## Running as a Service
+
+<details>
+<summary><b>Service setup for Linux, macOS, and Windows — click to expand</b></summary>
 
 DuoLogSync can be installed as a system service so it starts automatically and runs in the background.
 
@@ -217,6 +225,8 @@ duologsync-service debug     # run interactively for troubleshooting
 ```
 
 The config file path is stored in the Windows registry. The service appears as "Duo Log Sync" in the Services management console.
+
+</details>
 
 ---
 
