@@ -1,6 +1,7 @@
 """
 Definition of the TelephonyProducer class
 """
+
 import datetime
 import functools
 import math
@@ -58,9 +59,7 @@ class TelephonyProducer(Producer):
             parameters["next_offset"] = [f"{self.log_offset}"]
 
         api_result = await run_in_executor(
-            functools.partial(
-                self.api_call, method="GET", path=self.url_path, params=parameters
-            )
+            functools.partial(self.api_call, method="GET", path=self.url_path, params=parameters)
         )
 
         return api_result

@@ -1,6 +1,6 @@
 [Unit]
 Description=Duo Log Sync - Duo Admin API log synchronization
-Documentation=https://github.com/duosecurity/duo_log_sync
+Documentation=https://github.com/MarkTripod-Duo/duo_log_sync
 After=network-online.target
 Wants=network-online.target
 

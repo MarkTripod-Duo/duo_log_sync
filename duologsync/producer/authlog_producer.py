@@ -16,8 +16,7 @@ class AuthlogProducer(Producer):
     """
 
     def __init__(self, api_call, log_queue, child_account_id=None, url_path=None):
-        super().__init__(api_call, log_queue, Config.AUTH, account_id=child_account_id,
-                         url_path=url_path)
+        super().__init__(api_call, log_queue, Config.AUTH, account_id=child_account_id, url_path=url_path)
         self.mintime = None
 
         # log_offset for Auth can be an int or a tuple, depending on if there
@@ -45,20 +44,21 @@ class AuthlogProducer(Producer):
                 self.mintime = (int(time.time()) - 86400) * 1000
 
             # Make an API call to retrieve authlog logs for MSP accounts
-            parameters = normalize_params({"mintime": str(self.mintime), "maxtime": str(int(time.time()) * 1000),
-                                           "limit": '1000',
-                                           "account_id": self.account_id, "sort": 'ts:asc'})
+            parameters = normalize_params(
+                {
+                    "mintime": str(self.mintime),
+                    "maxtime": str(int(time.time()) * 1000),
+                    "limit": "1000",
+                    "account_id": self.account_id,
+                    "sort": "ts:asc",
+                }
+            )
 
             if self.log_offset is not None:
                 parameters["next_offset"] = self.log_offset
 
             authlog_api_result = await run_in_executor(
-                functools.partial(
-                    self.api_call,
-                    method="GET",
-                    path=self.url_path,
-                    params=parameters
-                )
+                functools.partial(self.api_call, method="GET", path=self.url_path, params=parameters)
             )
         else:
             # Make an API call to retrieve authlog logs
@@ -68,8 +68,8 @@ class AuthlogProducer(Producer):
                     api_version=2,
                     mintime=self.mintime,
                     next_offset=self.log_offset,
-                    sort='ts:asc',
-                    limit='1000'
+                    sort="ts:asc",
+                    limit="1000",
                 )
             )
 

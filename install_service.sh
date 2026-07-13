@@ -19,7 +19,7 @@ SERVICE_GROUP="duologsync"
 CONFIG_DIR="/etc/duologsync"
 
 # macOS-specific settings
-LAUNCHD_LABEL="com.duosecurity.duologsync"
+LAUNCHD_LABEL="io.github.marktripod-duo.duologsync"
 MACOS_SERVICE_USER="_duologsync"
 MACOS_SERVICE_GROUP="_duologsync"
 MACOS_LOG_DIR="/usr/local/var/log/duologsync"

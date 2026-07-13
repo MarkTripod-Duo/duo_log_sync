@@ -45,8 +45,7 @@ class Producer:
         while Program.is_running():
             shutdown_reason = None
             Program.log(
-                f"{self.log_type} producer: fetching next logs after "
-                f"{Config.get_api_timeout()} seconds",
+                f"{self.log_type} producer: fetching next logs after {Config.get_api_timeout()} seconds",
                 logging.INFO,
             )
 
@@ -64,9 +63,7 @@ class Producer:
                     formatted_logs = self.get_logs(api_result)
                     await self.add_logs_to_queue(formatted_logs)
                 else:
-                    Program.log(
-                        f"{self.log_type} producer: no new logs available", logging.INFO
-                    )
+                    Program.log(f"{self.log_type} producer: no new logs available", logging.INFO)
 
             except gaierror as gai_error:
                 shutdown_reason = self.handle_address_info_error(gai_error)
@@ -101,7 +98,10 @@ class Producer:
         Handle an address info error gracefully by logging the error and returning a string to indicate that the producer should shut down.
         """
         err = extract_error_info(gai_error)
-        Program.log(f"{self.log_type} producer: make sure that the host information details provider in the configuration file {Config.get_config_file_path()} is correct", logging.ERROR)
+        Program.log(
+            f"{self.log_type} producer: make sure that the host information details provider in the configuration file {Config.get_config_file_path()} is correct",
+            logging.ERROR,
+        )
         return f"{self.log_type} producer: [{err['error_message']} error_code: {err['error_code']}]"
 
     def handle_runtime_error_gracefully(self, runtime_error: RuntimeError):
@@ -112,7 +112,7 @@ class Producer:
         """
         http_error_code = getattr(runtime_error, "status", None)
         error_data = getattr(runtime_error, "data", None)
-        error_code = error_data.get('code') if isinstance(error_data, dict) else None
+        error_code = error_data.get("code") if isinstance(error_data, dict) else None
 
         if self.eligible_for_retry(http_error_code):
             Program.log(
@@ -122,7 +122,9 @@ class Producer:
 
             return None
 
-        return f"{self.log_type} producer: [{runtime_error} error_code: {error_code} http_status_code: {http_error_code}]"
+        return (
+            f"{self.log_type} producer: [{runtime_error} error_code: {error_code} http_status_code: {http_error_code}]"
+        )
 
     @staticmethod
     def eligible_for_retry(http_error_code):
@@ -146,9 +148,7 @@ class Producer:
         """
 
         # Important for recovery in the event of a crash
-        self.log_offset = Producer.get_log_offset(
-            logs, current_log_offset=self.log_offset, log_type=self.log_type
-        )
+        self.log_offset = Producer.get_log_offset(logs, current_log_offset=self.log_offset, log_type=self.log_type)
 
         # Authlogs v2, Trust Monitor, Telephony, and Activity endpoint returns dict response
         if isinstance(logs, dict):
@@ -194,14 +194,10 @@ class Producer:
             }
 
             api_result = await run_in_executor(
-                functools.partial(
-                    self.api_call, method="GET", path=self.url_path, params=parameters
-                )
+                functools.partial(self.api_call, method="GET", path=self.url_path, params=parameters)
             )
         else:
-            api_result = await run_in_executor(
-                functools.partial(self.api_call, mintime=self.log_offset)
-            )
+            api_result = await run_in_executor(functools.partial(self.api_call, mintime=self.log_offset))
 
         return api_result
 
@@ -238,10 +234,7 @@ class Producer:
         # Hence, calculating timestamp from isotimestamp field.
         if isinstance(log, dict):
             if log_type is not None and log_type == Config.AUTH:
-                if (
-                    log.get("authlogs")
-                    and log.get("metadata", {}).get("next_offset") is not None
-                ):
+                if log.get("authlogs") and log.get("metadata", {}).get("next_offset") is not None:
                     return log.get("metadata", {}).get("next_offset")
 
             if log_type is not None and log_type in [Config.ACTIVITY, Config.TELEPHONY]:
@@ -286,9 +279,9 @@ class Producer:
                         events = log.get("events", {})
                         if events:
                             last_event = events[len(events) - 1]
-                            next_timestamp_to_poll_from = last_event.get(
-                                "surfaced"
-                            ) or last_event.get("surfaced_timestamp")
+                            next_timestamp_to_poll_from = last_event.get("surfaced") or last_event.get(
+                                "surfaced_timestamp"
+                            )
                             return int(next_timestamp_to_poll_from) + 1
 
             if log.get("isotimestamp") and log.get("txid"):

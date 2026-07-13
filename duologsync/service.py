@@ -54,8 +54,7 @@ def _set_config_path_in_registry(config_path):
             winreg.SetValueEx(key, _REGISTRY_VALUE, 0, winreg.REG_SZ, config_path)
     except OSError as exc:
         raise RuntimeError(
-            f"Cannot write config path to registry. "
-            f"Are you running as Administrator? Error: {exc}"
+            f"Cannot write config path to registry. Are you running as Administrator? Error: {exc}"
         ) from exc
 
 
@@ -101,9 +100,7 @@ if _WIN32_AVAILABLE:
             try:
                 run(config_path)
             except Exception as exc:
-                servicemanager.LogErrorMsg(
-                    f"DuoLogSync failed with error: {exc}"
-                )
+                servicemanager.LogErrorMsg(f"DuoLogSync failed with error: {exc}")
 
             servicemanager.LogMsg(
                 servicemanager.EVENTLOG_INFORMATION_TYPE,
@@ -121,8 +118,7 @@ def main():
     """
     if not _WIN32_AVAILABLE:
         print(
-            "Error: pywin32 is required for Windows service support.\n"
-            "Install it with: pip install pywin32",
+            "Error: pywin32 is required for Windows service support.\nInstall it with: pip install pywin32",
             file=sys.stderr,
         )
         sys.exit(1)

@@ -11,7 +11,7 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.duosecurity.duologsync</string>
+    <string>io.github.marktripod-duo.duologsync</string>
 
     <key>ProgramArguments</key>
     <array>

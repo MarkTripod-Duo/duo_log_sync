@@ -9,7 +9,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
-import duo_client # type: ignore
+import duo_client  # type: ignore
 
 from duologsync.__version__ import __version__
 from duologsync.config import Config
@@ -63,22 +63,20 @@ async def run_in_executor(function_obj):
 
     return result
 
+
 def store_failed_udp_ingestion_logs(log_type, checkpoint_directory, log):
-    file_path = os.path.join(
-        checkpoint_directory, f"{log_type}_udp_failed_ingestion_logs.txt"
-    )
+    file_path = os.path.join(checkpoint_directory, f"{log_type}_udp_failed_ingestion_logs.txt")
 
     # Open the udp file, 'with' statement automatically closes it
     with open(file_path, "a+") as udp_file:
-        udp_file.write(log.decode('utf-8'))
+        udp_file.write(log.decode("utf-8"))
         Program.log(
             f"{log_type} producer: storing failed UDP logs in backlog file at '{file_path}'",
             logging.INFO,
         )
 
-def get_log_offset(
-    log_type, recover_log_offset, checkpoint_directory, child_account_id=None
-):
+
+def get_log_offset(log_type, recover_log_offset, checkpoint_directory, child_account_id=None):
     """
     Retrieve the offset from which logs of log_type should be fetched either by
     using the default offset or by using a timestamp saved in a checkpoint file
@@ -107,9 +105,7 @@ def get_log_offset(
                     f"{log_type}_checkpoint_data_{child_account_id}.txt",
                 )
                 if child_account_id
-                else os.path.join(
-                    checkpoint_directory, f"{log_type}_checkpoint_data.txt"
-                )
+                else os.path.join(checkpoint_directory, f"{log_type}_checkpoint_data.txt")
             )
             Program.log(
                 f"{log_type} producer: recovering log offset from checkpoint file at '{checkpoint_file_path}'",
@@ -127,9 +123,7 @@ def get_log_offset(
             display_offset = log_offset
             if log_type in MILLISECOND_BASED_LOG_TYPES:
                 display_offset /= milliseconds_per_second
-            iso_timestamp = datetime.fromtimestamp(
-                display_offset, tz=timezone.utc
-            ).isoformat()
+            iso_timestamp = datetime.fromtimestamp(display_offset, tz=timezone.utc).isoformat()
             Program.log(
                 f"{log_type} producer: could not access checkpoint file '{err['filename']}' to read log offset due to error: {err['error_message']} error_code: {err['error_code']}",
                 logging.WARNING,
@@ -157,26 +151,18 @@ def create_admin(ikey, skey, host, is_msp=False, proxy_server=None, proxy_port=N
     """
 
     if is_msp:
-        admin = duo_client.Accounts(
-            ikey=ikey, skey=skey, host=host, user_agent=f"Duo Log Sync/{__version__}"
-        )
+        admin = duo_client.Accounts(ikey=ikey, skey=skey, host=host, user_agent=f"Duo Log Sync/{__version__}")
         Program.log(
             f"duo_client Account_Admin initialized for ikey: {ikey}, host: {host}",
             logging.INFO,
         )
     else:
-        admin = duo_client.Admin(
-            ikey=ikey, skey=skey, host=host, user_agent=f"Duo Log Sync/{__version__}"
-        )
-        Program.log(
-            f"duo_client Admin initialized for ikey: {ikey}, host: {host}", logging.INFO
-        )
+        admin = duo_client.Admin(ikey=ikey, skey=skey, host=host, user_agent=f"Duo Log Sync/{__version__}")
+        Program.log(f"duo_client Admin initialized for ikey: {ikey}, host: {host}", logging.INFO)
 
     if proxy_server and proxy_port:
         admin.set_proxy(host=proxy_server, port=proxy_port)
-        Program.log(
-            f"duo_client Proxy configured: {proxy_server}:{proxy_port}", logging.INFO
-        )
+        Program.log(f"duo_client Proxy configured: {proxy_server}:{proxy_port}", logging.INFO)
 
     return admin
 
@@ -186,6 +172,7 @@ def normalize_params(params):
     Return copy of params with strings listified
     and unicode strings utf-8 encoded.
     """
+
     # urllib cannot handle unicode strings properly. quote() excepts,
     # and urlencode() replaces them with '?'.
     def encode(value):
@@ -198,10 +185,7 @@ def normalize_params(params):
             return [value]
         return value
 
-    return dict(
-        (encode(key), [encode(v) for v in to_list(value)])
-        for (key, value) in list(params.items())
-    )
+    return dict((encode(key), [encode(v) for v in to_list(value)]) for (key, value) in list(params.items()))
 
 
 def check_for_specific_endpoint(endpoint, config):
@@ -212,9 +196,7 @@ def check_for_specific_endpoint(endpoint, config):
     endpoint (string): The endpoint to check [options: auth, telephony, trustmonitor, useractivity]
     config: (dict): The dictionary representation of the config.yml
     """
-    endpoint_server_mappings = config.get("account", {}).get(
-        "endpoint_server_mappings", {}
-    )
+    endpoint_server_mappings = config.get("account", {}).get("endpoint_server_mappings", {})
     endpoints_to_server = [e.get("endpoints", []) for e in endpoint_server_mappings]
 
     for endpoints in endpoints_to_server:
@@ -222,6 +204,7 @@ def check_for_specific_endpoint(endpoint, config):
             return True
 
     return False
+
 
 def extract_error_info(exc, *extra_attrs):
     """

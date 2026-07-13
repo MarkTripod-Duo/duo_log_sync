@@ -92,15 +92,11 @@ def run(config_path):
     is_msp = Config.account_is_msp()
 
     if is_dtm_in_config and log_format != "JSON":
-        Program.log(
-            "DuoLogSync: Trust Monitor endpoint only supports JSON", logging.WARNING
-        )
+        Program.log("DuoLogSync: Trust Monitor endpoint only supports JSON", logging.WARNING)
         return
 
     if is_dtm_in_config and is_msp:
-        Program.log(
-            "DuoLogSync: Trust Monitor endpoint only supports non-msp", logging.WARNING
-        )
+        Program.log("DuoLogSync: Trust Monitor endpoint only supports non-msp", logging.WARNING)
         return
 
     Program.setup_logging(Config.get_log_filepath())
@@ -113,16 +109,11 @@ def run(config_path):
 
     # Run the Producers and Consumers
     asyncio.get_event_loop().run_until_complete(asyncio.gather(*tasks))
-    asyncio.get_event_loop().run_until_complete(
-            Writer.shutdown_writers(server_to_writer)
-            )
+    asyncio.get_event_loop().run_until_complete(Writer.shutdown_writers(server_to_writer))
     asyncio.get_event_loop().close()
 
     if Program.is_logging_set():
-        print(
-            f"DuoLogSync: shutdown successfully. Check "
-            f"{Config.get_log_filepath()} for program logs"
-        )
+        print(f"DuoLogSync: shutdown successfully. Check {Config.get_log_filepath()} for program logs")
 
 
 def _validate_and_exit(config_path):
@@ -163,9 +154,7 @@ def signal_handler(signal_number, stack_frame):
     Program.initiate_shutdown(shutdown_reason)
 
     if stack_frame:
-        Program.log(
-            f"DuoLogSync: stack frame from signal is {stack_frame}", logging.INFO
-        )
+        Program.log(f"DuoLogSync: stack frame from signal is {stack_frame}", logging.INFO)
 
 
 def create_tasks(server_to_writer):
@@ -206,9 +195,7 @@ def create_tasks(server_to_writer):
                 writer = server_to_writer[mapping.get("server")]
 
                 for endpoint in mapping.get("endpoints"):
-                    new_tasks = create_consumer_producer_pair(
-                        endpoint, writer, admin, account
-                    )
+                    new_tasks = create_consumer_producer_pair(endpoint, writer, admin, account)
                     tasks.extend(new_tasks)
     else:
         for mapping in Config.get_account_endpoint_server_mappings():
@@ -260,9 +247,7 @@ def create_consumer_producer_pair(endpoint, writer, admin, child_account=None):
         )
         consumer = TelephonyConsumer(log_format, log_queue, writer)
     elif endpoint == Config.TRUST_MONITOR:
-        producer = TrustMonitorProducer(
-            admin.get_trust_monitor_events_by_offset, log_queue
-        )
+        producer = TrustMonitorProducer(admin.get_trust_monitor_events_by_offset, log_queue)
         consumer = TrustMonitorConsumer(log_format, log_queue, writer, child_account)
     elif endpoint == Config.ACTIVITY:
         producer = ActivityProducer(

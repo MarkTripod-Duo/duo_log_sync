@@ -41,15 +41,11 @@ class DatagramProtocol(asyncio.DatagramProtocol):
 
         if exc:
             shutdown_reason = (
-                f"UDP connection with host-{self.host} and port-{self.port} "
-                f"was closed for the following reason [{exc}]"
+                f"UDP connection with host-{self.host} and port-{self.port} was closed for the following reason [{exc}]"
             )
 
         else:
-            shutdown_reason = (
-                f"UDP connection with host-{self.host} and port-{self.port} "
-                "was closed"
-            )
+            shutdown_reason = f"UDP connection with host-{self.host} and port-{self.port} was closed"
 
         Program.initiate_shutdown(shutdown_reason)
 
@@ -68,18 +64,18 @@ class LocalFileWriter:
     ROTATION_BOTH = "both"
 
     def __init__(
-            self,
-            filepath,
-            checkpoint_directory,
-            queue_max_size,
-            max_retries,
-            retry_backoff_seconds,
-            enable_test_input,
-            rotation=ROTATION_NONE,
-            max_bytes=104857600,
-            rotation_interval="daily",
-            backup_count=7,
-            ):
+        self,
+        filepath,
+        checkpoint_directory,
+        queue_max_size,
+        max_retries,
+        retry_backoff_seconds,
+        enable_test_input,
+        rotation=ROTATION_NONE,
+        max_bytes=104857600,
+        rotation_interval="daily",
+        backup_count=7,
+    ):
         self.filepath = self._validate_filepath(filepath)
         self.checkpoint_directory = Path(checkpoint_directory)
         self.queue = asyncio.Queue(maxsize=queue_max_size)
@@ -119,21 +115,17 @@ class LocalFileWriter:
                 directory.mkdir(parents=True, exist_ok=True)
             except OSError as error:
                 raise OSError(
-                        f"failed to create directory '{directory}' for FILE output "
-                        f"error_message: {error.strerror} error_code: {error.errno}"
-                        ) from error
+                    f"failed to create directory '{directory}' for FILE output "
+                    f"error_message: {error.strerror} error_code: {error.errno}"
+                ) from error
 
         if not directory.is_dir():
-            raise FileNotFoundError(
-                    f"path '{directory}' is not a directory for FILE output"
-                    )
+            raise FileNotFoundError(f"path '{directory}' is not a directory for FILE output")
 
         LocalFileWriter._validate_directory_writable(directory)
 
         if normalized_path.is_dir():
-            raise IsADirectoryError(
-                    f"filepath '{normalized_path}' is a directory, expected a file"
-                    )
+            raise IsADirectoryError(f"filepath '{normalized_path}' is a directory, expected a file")
 
         LocalFileWriter._validate_existing_file_writable(normalized_path)
 
@@ -146,9 +138,9 @@ class LocalFileWriter:
                 pass
         except OSError as error:
             raise PermissionError(
-                    f"directory '{directory}' is not writable for FILE output "
-                    f"error_message: {error.strerror} error_code: {error.errno}"
-                    ) from error
+                f"directory '{directory}' is not writable for FILE output "
+                f"error_message: {error.strerror} error_code: {error.errno}"
+            ) from error
 
     @staticmethod
     def _validate_existing_file_writable(filepath):
@@ -160,9 +152,9 @@ class LocalFileWriter:
                 pass
         except OSError as error:
             raise PermissionError(
-                    f"filepath '{filepath}' is not writable for FILE output "
-                    f"error_message: {error.strerror} error_code: {error.errno}"
-                    ) from error
+                f"filepath '{filepath}' is not writable for FILE output "
+                f"error_message: {error.strerror} error_code: {error.errno}"
+            ) from error
 
     def register_log_type(self, log_type):
         self._registered_log_types.add(log_type)
@@ -176,9 +168,9 @@ class LocalFileWriter:
                 return
 
             Program.log(
-                    f"DuoLogSync: local file writer starting for '{self.filepath}'",
-                    logging.INFO,
-                    )
+                f"DuoLogSync: local file writer starting for '{self.filepath}'",
+                logging.INFO,
+            )
 
             for log_type in sorted(self._registered_log_types):
                 await self._initialize_log_type(log_type)
@@ -186,18 +178,18 @@ class LocalFileWriter:
             self._worker_task = asyncio.ensure_future(self._process_queue())
             self._started = True
             Program.log(
-                    f"DuoLogSync: local file writer started for '{self.filepath}'",
-                    logging.INFO,
-                    )
+                f"DuoLogSync: local file writer started for '{self.filepath}'",
+                logging.INFO,
+            )
 
     async def shutdown(self):
         if not self._started:
             return
 
         Program.log(
-                f"DuoLogSync: local file writer shutting down for '{self.filepath}'",
-                logging.INFO,
-                )
+            f"DuoLogSync: local file writer shutting down for '{self.filepath}'",
+            logging.INFO,
+        )
 
         await self.queue.put(self._STOP)
 
@@ -205,9 +197,9 @@ class LocalFileWriter:
             await self._worker_task
 
         Program.log(
-                f"DuoLogSync: local file writer shutdown complete for '{self.filepath}'",
-                logging.INFO,
-                )
+            f"DuoLogSync: local file writer shutdown complete for '{self.filepath}'",
+            logging.INFO,
+        )
 
     async def write(self, data, log_type):
         await self.start()
@@ -217,9 +209,9 @@ class LocalFileWriter:
             self.queue.put_nowait((log_type, data))
         except asyncio.QueueFull:
             Program.log(
-                    f"{log_type} consumer: FILE writer queue is full, writing entry to backlog",
-                    logging.WARNING,
-                    )
+                f"{log_type} consumer: FILE writer queue is full, writing entry to backlog",
+                logging.WARNING,
+            )
             await self._append_backlog(log_type, data)
 
     async def inject_test_data(self, log_type, payloads):
@@ -263,9 +255,7 @@ class LocalFileWriter:
 
                 log_type, data = item
                 try:
-                    write_success, should_backlog = await self._write_with_retries(
-                            data, log_type
-                            )
+                    write_success, should_backlog = await self._write_with_retries(data, log_type)
                     if not write_success and should_backlog:
                         await self._append_backlog(log_type, data)
                 except Exception as error:
@@ -290,17 +280,13 @@ class LocalFileWriter:
                 f"error_message: {error}",
                 logging.ERROR,
             )
-            Program.initiate_shutdown(
-                f"FILE writer queue processor crashed: {error}"
-            )
+            Program.initiate_shutdown(f"FILE writer queue processor crashed: {error}")
 
     async def _write_with_retries(self, data, log_type):
         attempts = self.max_retries + 1
         for attempt in range(1, attempts + 1):
             try:
-                await asyncio.get_event_loop().run_in_executor(
-                        None, self._write_to_file, data
-                        )
+                await asyncio.get_event_loop().run_in_executor(None, self._write_to_file, data)
                 return True, False
             except OSError as error:
                 if self._is_disk_full_error(error):
@@ -309,17 +295,17 @@ class LocalFileWriter:
 
                 if attempt == attempts:
                     Program.log(
-                            f"{log_type} consumer: exhausted FILE write retries for '{self.filepath}' error_message: "
-                            f"{error.strerror} error_code: {error.errno}",
-                            logging.ERROR,
-                            )
+                        f"{log_type} consumer: exhausted FILE write retries for '{self.filepath}' error_message: "
+                        f"{error.strerror} error_code: {error.errno}",
+                        logging.ERROR,
+                    )
                     return False, True
 
                 Program.log(
-                        f"{log_type} consumer: FILE write failed (attempt {attempt}/{attempts}) for '"
-                        f"{self.filepath}', retrying error_message: {error.strerror} error_code: {error.errno}",
-                        logging.WARNING,
-                        )
+                    f"{log_type} consumer: FILE write failed (attempt {attempt}/{attempts}) for '"
+                    f"{self.filepath}', retrying error_message: {error.strerror} error_code: {error.errno}",
+                    logging.WARNING,
+                )
                 backoff = (self.retry_backoff_seconds * (2 ** (attempt - 1))) + random.uniform(0, 0.1)
                 await asyncio.sleep(backoff)
 
@@ -380,8 +366,7 @@ class LocalFileWriter:
                 if current_size + incoming_len > self.max_bytes:
                     should_rotate = True
 
-            if not should_rotate and self.rotation in (
-                    self.ROTATION_TIME, self.ROTATION_BOTH):
+            if not should_rotate and self.rotation in (self.ROTATION_TIME, self.ROTATION_BOTH):
                 file_date = date.fromtimestamp(self.filepath.stat().st_mtime)
                 if file_date < date.today():
                     should_rotate = True
@@ -390,31 +375,29 @@ class LocalFileWriter:
                 self._rotate_file()
         except OSError as error:
             Program.log(
-                    f"FILE writer: rotation check failed for '{self.filepath}', "
-                    f"continuing on current file "
-                    f"error_message: {getattr(error, 'strerror', error)} "
-                    f"error_code: {getattr(error, 'errno', None)}",
-                    logging.WARNING,
-                    )
+                f"FILE writer: rotation check failed for '{self.filepath}', "
+                f"continuing on current file "
+                f"error_message: {getattr(error, 'strerror', error)} "
+                f"error_code: {getattr(error, 'errno', None)}",
+                logging.WARNING,
+            )
 
     def _rotate_file(self):
         """Rename the active file to a timestamped backup and prune old ones."""
-        timestamp = datetime.fromtimestamp(
-                self.filepath.stat().st_mtime).strftime("%Y-%m-%d_%H%M%S")
+        timestamp = datetime.fromtimestamp(self.filepath.stat().st_mtime).strftime("%Y-%m-%d_%H%M%S")
 
         candidate = self.filepath.parent / f"{self.filepath.name}.{timestamp}"
         counter = 1
         # Guard against multiple rotations within the same second.
         while candidate.exists():
-            candidate = self.filepath.parent / (
-                    f"{self.filepath.name}.{timestamp}.{counter}")
+            candidate = self.filepath.parent / (f"{self.filepath.name}.{timestamp}.{counter}")
             counter += 1
 
         self.filepath.replace(candidate)
         Program.log(
-                f"FILE writer: rotated '{self.filepath}' to '{candidate}'",
-                logging.INFO,
-                )
+            f"FILE writer: rotated '{self.filepath}' to '{candidate}'",
+            logging.INFO,
+        )
         self._prune_backups()
 
     def _prune_backups(self):
@@ -438,43 +421,39 @@ class LocalFileWriter:
                 return (0.0, path.name)
 
         backups = sorted(
-                (path for path in self.filepath.parent.glob(pattern)
-                 if path.is_file()),
-                key=sort_key,
-                )
+            (path for path in self.filepath.parent.glob(pattern) if path.is_file()),
+            key=sort_key,
+        )
 
         excess = len(backups) - self.backup_count
-        for stale in backups[:max(0, excess)]:
+        for stale in backups[: max(0, excess)]:
             try:
                 stale.unlink()
                 Program.log(
-                        f"FILE writer: pruned rotated file '{stale}'",
-                        logging.INFO,
-                        )
+                    f"FILE writer: pruned rotated file '{stale}'",
+                    logging.INFO,
+                )
             except OSError:
                 # Best-effort cleanup; a failed unlink must not stop writing.
                 pass
 
     async def _append_backlog(self, log_type, data):
-        error = await asyncio.get_event_loop().run_in_executor(
-                None, self._append_backlog_sync, log_type, data
-                )
+        error = await asyncio.get_event_loop().run_in_executor(None, self._append_backlog_sync, log_type, data)
         if error is not None:
             if self._is_disk_full_error(error):
                 self._shutdown_for_disk_full(log_type, error)
             else:
                 Program.log(
-                        f"{log_type} consumer: failed to write FILE backlog "
-                        f"'{self._backlog_path(log_type)}' "
-                        f"error_message: {error.strerror} error_code: {error.errno}",
-                        logging.ERROR,
-                        )
+                    f"{log_type} consumer: failed to write FILE backlog "
+                    f"'{self._backlog_path(log_type)}' "
+                    f"error_message: {error.strerror} error_code: {error.errno}",
+                    logging.ERROR,
+                )
         else:
             Program.log(
-                    f"{log_type} consumer: stored FILE write failure in backlog "
-                    f"'{self._backlog_path(log_type)}'",
-                    logging.WARNING,
-                    )
+                f"{log_type} consumer: stored FILE write failure in backlog '{self._backlog_path(log_type)}'",
+                logging.WARNING,
+            )
 
     def _append_backlog_sync(self, log_type, data):
         """Write data to backlog file. Returns the OSError on failure, None on success."""
@@ -493,15 +472,15 @@ class LocalFileWriter:
 
         if replay_path.exists():
             Program.log(
-                    f"{log_type} consumer: found in-progress FILE backlog replay '{replay_path}'",
-                    logging.INFO,
-                    )
+                f"{log_type} consumer: found in-progress FILE backlog replay '{replay_path}'",
+                logging.INFO,
+            )
         elif backlog_path.exists() and backlog_path.stat().st_size > 0:
             backlog_path.replace(replay_path)
             Program.log(
-                    f"{log_type} consumer: detected startup FILE backlog '{backlog_path}', replay starting",
-                    logging.INFO,
-                    )
+                f"{log_type} consumer: detected startup FILE backlog '{backlog_path}', replay starting",
+                logging.INFO,
+            )
 
         if not replay_path.exists():
             return
@@ -514,9 +493,9 @@ class LocalFileWriter:
             except OSError:
                 pass
             Program.log(
-                    f"{log_type} consumer: FILE backlog replay completed for '{self.filepath}'",
-                    logging.INFO,
-                    )
+                f"{log_type} consumer: FILE backlog replay completed for '{self.filepath}'",
+                logging.INFO,
+            )
 
     async def _replay_backlog_file(self, log_type, replay_path):
         try:
@@ -532,24 +511,24 @@ class LocalFileWriter:
 
                     remaining_lines = [line] + replay_file.readlines()
                     await asyncio.get_event_loop().run_in_executor(
-                            None,
-                            self._append_remaining_backlog,
-                            self._backlog_path(log_type),
-                            remaining_lines,
-                            )
+                        None,
+                        self._append_remaining_backlog,
+                        self._backlog_path(log_type),
+                        remaining_lines,
+                    )
                     Program.log(
-                            f"{log_type} consumer: FILE backlog replay paused after write failure, remaining entries "
-                            f"preserved",
-                            logging.WARNING,
-                            )
+                        f"{log_type} consumer: FILE backlog replay paused after write failure, remaining entries "
+                        f"preserved",
+                        logging.WARNING,
+                    )
                     return False
 
         except OSError as error:
             Program.log(
-                    f"{log_type} consumer: failed to read FILE backlog replay file '{replay_path}' error_message: "
-                    f"{error.strerror} error_code: {error.errno}",
-                    logging.ERROR,
-                    )
+                f"{log_type} consumer: failed to read FILE backlog replay file '{replay_path}' error_message: "
+                f"{error.strerror} error_code: {error.errno}",
+                logging.ERROR,
+            )
             return False
 
     @staticmethod
@@ -562,14 +541,14 @@ class LocalFileWriter:
 
     def _shutdown_for_disk_full(self, log_type, error):
         Program.log(
-                f"{log_type} consumer: disk full detected for FILE output '{self.filepath}' error_message: "
-                f"{error.strerror} error_code: {error.errno}",
-                logging.ERROR,
-                )
+            f"{log_type} consumer: disk full detected for FILE output '{self.filepath}' error_message: "
+            f"{error.strerror} error_code: {error.errno}",
+            logging.ERROR,
+        )
         Program.initiate_shutdown(
-                f"{log_type} consumer: disk full for FILE output '{self.filepath}' "
-                f"error_message: {error.strerror} error_code: {error.errno}"
-                )
+            f"{log_type} consumer: disk full for FILE output '{self.filepath}' "
+            f"error_message: {error.strerror} error_code: {error.errno}"
+        )
 
     @staticmethod
     def _append_remaining_backlog(backlog_path, remaining_lines):
@@ -578,9 +557,7 @@ class LocalFileWriter:
                 backlog_file.write(line)
 
     def _backlog_path(self, log_type):
-        return self.checkpoint_directory / (
-                f"{log_type}_file_failed_ingestion_logs.txt"
-        )
+        return self.checkpoint_directory / (f"{log_type}_file_failed_ingestion_logs.txt")
 
 
 class Writer:
@@ -600,8 +577,8 @@ class Writer:
             self.create_writer(
                 self.hostname,
                 self.port,
-                    server.get("cert_filepath"),
-                    server.get("filepath"),
+                server.get("cert_filepath"),
+                server.get("filepath"),
             )
         )
 
@@ -666,7 +643,10 @@ class Writer:
                 await self.writer.drain()
             except (OSError, asyncio.TimeoutError) as error:
                 err = util.extract_error_info(error)
-                Program.log(f"{log_type} writer: {type(error).__name__} while sending data to {self.hostname}:{self.port} over {self.protocol} - error_message: {err['error_message']} error_code: {err['error_code']}\n{traceback.format_exc()}", logging.ERROR,)
+                Program.log(
+                    f"{log_type} writer: {type(error).__name__} while sending data to {self.hostname}:{self.port} over {self.protocol} - error_message: {err['error_message']} error_code: {err['error_code']}\n{traceback.format_exc()}",
+                    logging.ERROR,
+                )
                 raise
 
     def register_log_type(self, log_type):
@@ -730,38 +710,37 @@ class Writer:
 
         if self.protocol == "FILE":
             Program.log(
-                    f"DuoLogSync: Preparing local file writer for '{filepath}'",
-                    logging.INFO,
-                    )
+                f"DuoLogSync: Preparing local file writer for '{filepath}'",
+                logging.INFO,
+            )
             try:
                 return LocalFileWriter(
-                        filepath=filepath,
-                        checkpoint_directory=Config.get_checkpoint_dir(),
-                        queue_max_size=Config.get_file_output_queue_max_size(),
-                        max_retries=Config.get_file_output_max_retries(),
-                        retry_backoff_seconds=Config.get_file_output_retry_backoff_seconds(),
-                        enable_test_input=Config.get_file_output_test_input_enabled(),
-                        rotation=Config.get_file_output_rotation(),
-                        max_bytes=Config.get_file_output_max_bytes(),
-                        rotation_interval=Config.get_file_output_rotation_interval(),
-                        backup_count=Config.get_file_output_backup_count(),
-                        )
+                    filepath=filepath,
+                    checkpoint_directory=Config.get_checkpoint_dir(),
+                    queue_max_size=Config.get_file_output_queue_max_size(),
+                    max_retries=Config.get_file_output_max_retries(),
+                    retry_backoff_seconds=Config.get_file_output_retry_backoff_seconds(),
+                    enable_test_input=Config.get_file_output_test_input_enabled(),
+                    rotation=Config.get_file_output_rotation(),
+                    max_bytes=Config.get_file_output_max_bytes(),
+                    rotation_interval=Config.get_file_output_rotation_interval(),
+                    backup_count=Config.get_file_output_backup_count(),
+                )
             except (
-                        FileNotFoundError,
-                        IsADirectoryError,
-                        PermissionError,
-                        ValueError,
-                        OSError,
-                    ) as error:
+                FileNotFoundError,
+                IsADirectoryError,
+                PermissionError,
+                ValueError,
+                OSError,
+            ) as error:
                 Program.initiate_shutdown(str(error))
                 Program.log(
-                        "DuoLogSync: check FILE writer path configuration in config file",
-                        logging.ERROR,
-                        )
+                    "DuoLogSync: check FILE writer path configuration in config file",
+                    logging.ERROR,
+                )
                 return None
 
-        Program.log(f"DuoLogSync: Opening connection to {host}:{port} with protocol {self.protocol}",
-                    logging.INFO)
+        Program.log(f"DuoLogSync: Opening connection to {host}:{port} with protocol {self.protocol}", logging.INFO)
 
         # Message to be logged if an error occurs in this function
         help_message = f"DuoLogSync: check that host-{host} and port-{port} are correct in the configuration file '{Config.get_config_file_path()}'"
@@ -772,8 +751,7 @@ class Writer:
                 writer = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
             elif self.protocol == "TCPSSL":
-                ssl_context = ssl.create_default_context(
-                    ssl.Purpose.SERVER_AUTH, cafile=cert_filepath)
+                ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile=cert_filepath)
 
                 writer = await Writer.create_tcp_writer(host, port, ssl_context)
 
@@ -823,9 +801,6 @@ class Writer:
                 using TCP
         """
 
-        _, writer = await asyncio.wait_for(
-            asyncio.open_connection(host, port, ssl=ssl_context),
-            timeout=60
-        )
+        _, writer = await asyncio.wait_for(asyncio.open_connection(host, port, ssl=ssl_context), timeout=60)
 
         return writer
