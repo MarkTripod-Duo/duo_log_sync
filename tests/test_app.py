@@ -1,6 +1,6 @@
 from unittest import TestCase
 from unittest.mock import patch, call
-from duologsync.app import Program, create_tasks
+from duologsync.app import Program, create_tasks, _validate_and_exit
 from duologsync.config import Config
 import duo_client
 
@@ -166,3 +166,23 @@ class TestApp(TestCase):
 
         self.assertEqual(mock.call_count, 4)
         mock.assert_has_calls(calls, any_order=True)
+
+
+class TestValidateAndExit(TestCase):
+
+    def test_validate_valid_config_exits_zero(self):
+        config_filepath = 'tests/resources/config_files/standard.yml'
+        with self.assertRaises(SystemExit) as ctx:
+            _validate_and_exit(config_filepath)
+        self.assertEqual(ctx.exception.code, 0)
+
+    def test_validate_bad_config_exits_one(self):
+        config_filepath = 'tests/resources/config_files/bad_config.yml'
+        with self.assertRaises(SystemExit) as ctx:
+            _validate_and_exit(config_filepath)
+        self.assertEqual(ctx.exception.code, 1)
+
+    def test_validate_missing_file_exits_one(self):
+        with self.assertRaises(SystemExit) as ctx:
+            _validate_and_exit('nonexistent/path.yml')
+        self.assertEqual(ctx.exception.code, 1)

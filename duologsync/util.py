@@ -215,7 +215,7 @@ def check_for_specific_endpoint(endpoint, config):
     endpoint_server_mappings = config.get("account", {}).get(
         "endpoint_server_mappings", {}
     )
-    endpoints_to_server = [e["endpoints"] for e in endpoint_server_mappings]
+    endpoints_to_server = [e.get("endpoints", []) for e in endpoint_server_mappings]
 
     for endpoints in endpoints_to_server:
         if endpoint in endpoints:

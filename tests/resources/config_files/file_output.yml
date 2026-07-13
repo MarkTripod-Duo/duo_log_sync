@@ -1,0 +1,18 @@
+version: '1.0.0'
+dls_settings:
+  file_output:
+    queue_max_size: 100
+    max_retries: 2
+    retry_backoff_seconds: 0.01
+    enable_test_input: True
+servers:
+  - id: 'file server'
+    protocol: 'FILE'
+    filepath: '/tmp/duologsync-events.log'
+account:
+  ikey: 'AAA101020K12K1K23'
+  skey: 'jyJKYAGJKAYGDKJgyJygFUg9F9gyFuo9'
+  hostname: 'api-test.first.duosecurity.com'
+  endpoint_server_mappings:
+    - endpoints: ['auth']
+      server: 'file server'

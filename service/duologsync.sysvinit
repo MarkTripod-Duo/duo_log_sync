@@ -1,0 +1,66 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          duologsync
+# Required-Start:    $network $remote_fs $syslog
+# Required-Stop:     $network $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Duo Log Sync
+# Description:       Synchronizes authentication and log data from the
+#                    Duo Admin API into external systems.
+### END INIT INFO
+
+NAME="duologsync"
+DAEMON="/usr/local/bin/duologsync"
+DAEMON_ARGS="/etc/duologsync/config.yml"
+PIDFILE="/var/run/${NAME}.pid"
+LOGFILE="/var/log/${NAME}.log"
+USER="duologsync"
+GROUP="duologsync"
+
+[ -r /etc/default/${NAME} ] && . /etc/default/${NAME}
+
+. /lib/lsb/init-functions
+
+do_start() {
+    start-stop-daemon --start --quiet --background \
+        --pidfile "${PIDFILE}" --make-pidfile \
+        --chuid "${USER}:${GROUP}" \
+        --exec "${DAEMON}" -- ${DAEMON_ARGS} \
+        || return 1
+}
+
+do_stop() {
+    start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 \
+        --pidfile "${PIDFILE}" \
+        || return 1
+    rm -f "${PIDFILE}"
+}
+
+case "$1" in
+    start)
+        log_daemon_msg "Starting ${NAME}"
+        do_start
+        log_end_msg $?
+        ;;
+    stop)
+        log_daemon_msg "Stopping ${NAME}"
+        do_stop
+        log_end_msg $?
+        ;;
+    restart|force-reload)
+        log_daemon_msg "Restarting ${NAME}"
+        do_stop
+        do_start
+        log_end_msg $?
+        ;;
+    status)
+        status_of_proc -p "${PIDFILE}" "${DAEMON}" "${NAME}"
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|force-reload|status}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

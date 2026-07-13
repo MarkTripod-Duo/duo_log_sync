@@ -58,6 +58,42 @@ version: '1.0.0'
     # Port for Http Proxy
     #proxy_port: 8080
 
+  # Settings specific to local FILE output protocol
+  #file_output:
+
+    # Maximum in-memory queue size before FILE output backlogs to disk
+    #queue_max_size: 5000
+
+    # Number of retries attempted before writing to FILE backlog
+    #max_retries: 3
+
+    # Base retry backoff (seconds); exponential backoff with jitter is used
+    #retry_backoff_seconds: 0.2
+
+    # Enable direct test automation injection for FILE writers
+    #enable_test_input: False
+
+    # Log rotation for FILE output. Prevents output files from growing
+    # unbounded. Rotated files are named '<filepath>.<YYYY-MM-DD_HHMMSS>'.
+    # OPTIONS: none, size, time, both
+    #   none  - single-file append, no rotation (default)
+    #   size  - rotate when the file would exceed max_bytes
+    #   time  - rotate once per day (rotation_interval)
+    #   both  - rotate on whichever trigger is reached first
+    #rotation: 'none'
+
+    # Size threshold in bytes that triggers rotation when rotation is
+    # 'size' or 'both'. Default is 104857600 (100 MiB)
+    #max_bytes: 104857600
+
+    # Time-based rotation interval when rotation is 'time' or 'both'
+    # OPTIONS: daily
+    #rotation_interval: 'daily'
+
+    # Number of rotated files to retain; older ones are deleted.
+    # Set to 0 to delete rotated files immediately after rotation
+    #backup_count: 7
+
 # List of servers and how DLS will communicate with them
 servers:
   
@@ -65,8 +101,7 @@ servers:
     # REQUIRED
   - id: ''
 
-    # Address of server to which Duo logs will be sent. If there is nothing that consumes these
-    # logs, they will be lost, since writing to local storage is not supported
+    # Address of server to which Duo logs will be sent when protocol is TCP/TCPSSL/UDP
     # REQUIRED
     hostname: ''
 
@@ -77,7 +112,7 @@ servers:
     port:
 
     # Transport protocol used to communicate with the server
-    # OPTIONS: TCP, TCPSSL, UDP
+    # OPTIONS: TCP, TCPSSL, UDP, FILE
     # REQUIRED
     protocol: ''
 
@@ -86,6 +121,10 @@ servers:
     # give path of .cert/.pem file that has keys
     # REQUIRED only if protocol is TCPSSL
     cert_filepath: ''
+
+    # Path to local output file for FILE protocol
+    # REQUIRED only if protocol is FILE
+    filepath: ''
 
 # To add another server, copy and paste the above, change the server name to
 # something unique and descriptive, and fill out the 3 (or 4) fields required

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd LaunchDaemon for Duo Log Sync.
+
+  This file is a template: install_service.sh substitutes the __TOKENS__
+  below (executable path, config path, service user/group, log directory)
+  and installs the rendered copy to /Library/LaunchDaemons/. It is not meant
+  to be loaded directly with the tokens in place.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.duosecurity.duologsync</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>__DUOLOGSYNC_BIN__</string>
+        <string>__CONFIG_PATH__</string>
+    </array>
+
+    <!-- Start at boot and keep running. -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Restart on failure (non-zero exit), but not on a clean exit. -->
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <!-- Wait at least 10s between restarts to avoid crash-loops. -->
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+
+    <key>UserName</key>
+    <string>__SERVICE_USER__</string>
+
+    <key>GroupName</key>
+    <string>__SERVICE_GROUP__</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PYTHONUNBUFFERED</key>
+        <string>1</string>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>__LOG_DIR__/duologsync.out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>__LOG_DIR__/duologsync.err.log</string>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>

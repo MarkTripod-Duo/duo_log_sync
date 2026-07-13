@@ -20,45 +20,70 @@ import asyncio
 import logging
 import signal
 
-from duologsync.consumer.authlog_consumer import AuthlogConsumer
-from duologsync.producer.authlog_producer import AuthlogProducer
-from duologsync.consumer.telephony_consumer import TelephonyConsumer
-from duologsync.producer.telephony_producer import TelephonyProducer
-from duologsync.consumer.trustmonitor_consumer import TrustMonitorConsumer
-from duologsync.producer.trustmonitor_producer import TrustMonitorProducer
-from duologsync.consumer.activity_consumer import ActivityConsumer
-from duologsync.producer.activity_producer import ActivityProducer
-from duologsync.util import create_admin, check_for_specific_endpoint
-from duologsync.writer import Writer
 from duologsync.config import Config
+from duologsync.consumer.activity_consumer import ActivityConsumer
+from duologsync.consumer.authlog_consumer import AuthlogConsumer
+from duologsync.consumer.telephony_consumer import TelephonyConsumer
+from duologsync.consumer.trustmonitor_consumer import TrustMonitorConsumer
+from duologsync.producer.activity_producer import ActivityProducer
+from duologsync.producer.authlog_producer import AuthlogProducer
+from duologsync.producer.telephony_producer import TelephonyProducer
+from duologsync.producer.trustmonitor_producer import TrustMonitorProducer
 from duologsync.program import Program
+from duologsync.util import check_for_specific_endpoint, create_admin
+from duologsync.writer import Writer
 
 
 def main():
     """
-    Kicks off DuoLogSync by setting important variables, creating and running
-    a Producer-Consumer pair for each log-type defined in a config file passed
-    to the program.
+    CLI entry point. Parses arguments, registers signal handlers, and
+    delegates to run().
     """
 
     arg_parser = argparse.ArgumentParser(
-        prog="duologsync", description="Path to config file"
+        prog="duologsync",
+        description="Fetch logs from Duo endpoints and ingest them to SIEMs",
     )
     arg_parser.add_argument(
         "ConfigPath",
         metavar="config-path",
         type=str,
-        help="Config to start application",
+        help="Path to the YAML configuration file",
+    )
+    arg_parser.add_argument(
+        "--validate",
+        action="store_true",
+        default=False,
+        help="Validate the configuration file and exit without running",
     )
     args = arg_parser.parse_args()
+
+    # If --validate was requested, perform validation and exit
+    if args.validate:
+        _validate_and_exit(args.ConfigPath)
+        return
 
     # Handle shutting down the program via Ctrl-C
     signal.signal(signal.SIGINT, signal_handler)
     # Handle shutting down the program via SIGTERM
     signal.signal(signal.SIGTERM, signal_handler)
 
-    # Create a config Dictionary from a YAML file located at args.ConfigPath
-    config = Config.create_config(args.ConfigPath)
+    run(args.ConfigPath)
+
+
+def run(config_path):
+    """
+    Core application logic. Loads config, creates producers/consumers, and
+    runs the asyncio event loop until shutdown.
+
+    This function is called by both the CLI entry point and the Windows
+    service. It does not register signal handlers — callers are responsible
+    for triggering Program.initiate_shutdown() when appropriate.
+
+    @param config_path  Path to the YAML configuration file
+    """
+
+    config = Config.create_config(config_path)
     Config.set_config(config)
 
     # Do extra checks for Trust Monitor support
@@ -88,6 +113,9 @@ def main():
 
     # Run the Producers and Consumers
     asyncio.get_event_loop().run_until_complete(asyncio.gather(*tasks))
+    asyncio.get_event_loop().run_until_complete(
+            Writer.shutdown_writers(server_to_writer)
+            )
     asyncio.get_event_loop().close()
 
     if Program.is_logging_set():
@@ -95,6 +123,31 @@ def main():
             f"DuoLogSync: shutdown successfully. Check "
             f"{Config.get_log_filepath()} for program logs"
         )
+
+
+def _validate_and_exit(config_path):
+    """
+    Validate the config file at config_path and print results to the
+    console. Exits with code 0 on success, 1 on validation failure.
+
+    @param config_path  Path to the YAML configuration file
+    """
+    import sys
+
+    errors, warnings = Config.validate_config(config_path)
+
+    if warnings:
+        for warning in warnings:
+            print(f"WARNING: {warning}")
+
+    if errors:
+        for error in errors:
+            print(f"ERROR: {error}")
+        print(f"\nValidation FAILED for '{config_path}'")
+        sys.exit(1)
+    else:
+        print(f"Validation OK: '{config_path}' is a valid configuration file")
+        sys.exit(0)
 
 
 def signal_handler(signal_number, stack_frame):
@@ -222,6 +275,9 @@ def create_consumer_producer_pair(endpoint, writer, admin, child_account=None):
         Program.log(f"{endpoint} is not a recognized endpoint", logging.WARNING)
         del log_queue
         return []
+
+    if hasattr(writer, "register_log_type"):
+        writer.register_log_type(endpoint)
 
     tasks = [
         asyncio.ensure_future(producer.produce()),

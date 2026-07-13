@@ -1,10 +1,9 @@
 from unittest import TestCase
 from unittest.mock import patch
-import os
-import sys
-from yaml import YAMLError
+
 from duologsync.config import Config
 from duologsync.program import Program
+
 
 def running_is_false(msg):
     Program._running = False
@@ -162,6 +161,16 @@ class TestConfig(TestCase):
                 'proxy': {
                     'proxy_server': 'test.com',
                     'proxy_port': 1234
+                        },
+                    'file_output': {
+                            'queue_max_size': 5000,
+                            'max_retries': 3,
+                            'retry_backoff_seconds': 0.2,
+                            'enable_test_input': False,
+                            'rotation': 'none',
+                            'max_bytes': 104857600,
+                            'rotation_interval': 'daily',
+                            'backup_count': 7
                 }
             },
             'servers': [
@@ -250,8 +259,42 @@ class TestConfig(TestCase):
             config['dls_settings']['checkpointing']['enabled'], None)
         self.assertNotEqual(
             config['dls_settings']['checkpointing']['directory'], None)
+        self.assertNotEqual(
+                config['dls_settings']['file_output']['queue_max_size'], None
+                )
+        self.assertNotEqual(
+                config['dls_settings']['file_output']['max_retries'], None
+                )
+        self.assertNotEqual(
+                config['dls_settings']['file_output']['retry_backoff_seconds'], None
+                )
+        self.assertNotEqual(
+                config['dls_settings']['file_output']['enable_test_input'], None
+                )
         self.assertNotEqual(config['account']['is_msp'], None)
         self.assertNotEqual(config['account']['block_list'], None)
+
+    def test_create_config_file_output_protocol(self):
+        config_filepath = 'tests/resources/config_files/file_output.yml'
+
+        config = Config.create_config(config_filepath)
+
+        server = config['servers'][0]
+
+        self.assertEqual(server['protocol'], 'FILE')
+        self.assertEqual(server['filepath'], '/tmp/duologsync-events.log')
+        self.assertEqual(config['dls_settings']['file_output']['queue_max_size'], 100)
+        self.assertEqual(config['dls_settings']['file_output']['max_retries'], 2)
+        self.assertEqual(config['dls_settings']['file_output']['retry_backoff_seconds'], 0.01)
+        self.assertEqual(config['dls_settings']['file_output']['enable_test_input'], True)
+
+    @patch('duologsync.program.Program.initiate_shutdown')
+    def test_create_config_file_output_missing_filepath(self, mock_initiate_shutdown):
+        config_filepath = 'tests/resources/config_files/file_output_missing_filepath.yml'
+
+        Config.create_config(config_filepath)
+
+        mock_initiate_shutdown.assert_called_once()
 
     def test_get_value_from_keys_normal(self):
         dictionary = {'level_one': '2FA',
@@ -273,3 +316,77 @@ class TestConfig(TestCase):
 
         self.assertEqual(value_one, None)
         self.assertEqual(value_two, None)
+
+    # --- validate_config tests ---
+
+    def test_validate_config_valid_file(self):
+        config_filepath = 'tests/resources/config_files/standard.yml'
+        errors, warnings = Config.validate_config(config_filepath)
+        self.assertEqual(errors, [])
+        self.assertEqual(warnings, [])
+
+    def test_validate_config_bad_filepath(self):
+        errors, warnings = Config.validate_config('nonexistent/path.yml')
+        self.assertEqual(len(errors), 1)
+        self.assertIn('Failed to open config file', errors[0])
+
+    def test_validate_config_bad_yaml(self):
+        config_filepath = 'tests/resources/config_files/bad_yaml.yml'
+        errors, warnings = Config.validate_config(config_filepath)
+        self.assertEqual(len(errors), 1)
+        self.assertIn('Failed to parse YAML', errors[0])
+
+    def test_validate_config_bad_config(self):
+        config_filepath = 'tests/resources/config_files/bad_config.yml'
+        errors, warnings = Config.validate_config(config_filepath)
+        self.assertTrue(len(errors) > 0)
+        self.assertIn('Schema validation error', errors[0])
+
+    def test_validate_config_bad_values(self):
+        config_filepath = 'tests/resources/config_files/bad_values.yml'
+        errors, warnings = Config.validate_config(config_filepath)
+        self.assertTrue(len(errors) > 0)
+
+    def test_validate_config_file_output_missing_filepath(self):
+        config_filepath = 'tests/resources/config_files/file_output_missing_filepath.yml'
+        errors, warnings = Config.validate_config(config_filepath)
+        self.assertTrue(len(errors) > 0)
+
+    def test_validate_config_no_defaults_set(self):
+        config_filepath = 'tests/resources/config_files/no_defaults_set.yml'
+        errors, warnings = Config.validate_config(config_filepath)
+        self.assertEqual(errors, [])
+
+    def test_validate_config_low_timeout_warning(self):
+        """Config with api timeout below minimum should produce a warning."""
+        import tempfile
+        import os
+
+        config_content = """
+version: "1.0.0"
+servers:
+  - id: "test"
+    hostname: "localhost"
+    port: 8888
+    protocol: "TCP"
+account:
+  ikey: "TESTKEY123"
+  skey: "testsecretkey123"
+  hostname: "api-test.duosecurity.com"
+  endpoint_server_mappings:
+    - endpoints: ["auth"]
+      server: "test"
+dls_settings:
+  api:
+    timeout: 10
+"""
+        fd, tmppath = tempfile.mkstemp(suffix='.yml')
+        try:
+            with os.fdopen(fd, 'w') as f:
+                f.write(config_content)
+            errors, warnings = Config.validate_config(tmppath)
+            self.assertEqual(errors, [])
+            self.assertEqual(len(warnings), 1)
+            self.assertIn('below the minimum', warnings[0])
+        finally:
+            os.unlink(tmppath)

@@ -112,7 +112,7 @@ class Producer:
         """
         http_error_code = getattr(runtime_error, "status", None)
         error_data = getattr(runtime_error, "data", None)
-        error_code = error_data['code'] if error_data else None
+        error_code = error_data.get('code') if isinstance(error_data, dict) else None
 
         if self.eligible_for_retry(http_error_code):
             Program.log(

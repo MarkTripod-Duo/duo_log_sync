@@ -71,8 +71,9 @@ class Consumer:
                     # All the logs were written successfully
                     successful_write = True
 
-                # Specifically watch out for errno 32 - Broken pipe. This means
-                # that the connect established by writer was reset or shutdown.
+                # Handle connection failures: broken pipe, connection reset,
+                # connection aborted, and other OS-level socket errors. OSError
+                # is the base class for all of these.
                 except OSError as conn_error:
                     err = extract_error_info(conn_error)
                     shutdown_reason = (f"{self.log_type} consumer: connection error - [{conn_error} error_code: {err['error_code']}]")
