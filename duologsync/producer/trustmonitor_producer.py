@@ -1,6 +1,7 @@
 """
 Definition of the TrustMonitorProducer class
 """
+
 import functools
 import datetime
 import json

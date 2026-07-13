@@ -59,9 +59,7 @@ class TestGetLogOffset(TestCase):
             },
         }
         offset_in_metadata = sample_authlog_response["metadata"]["next_offset"]
-        producer_offset = Producer.get_log_offset(
-            sample_authlog_response, log_type=Config.AUTH
-        )
+        producer_offset = Producer.get_log_offset(sample_authlog_response, log_type=Config.AUTH)
         self.assertEqual(offset_in_metadata, producer_offset)
 
     def test_authlog_offset_value_consumer(self):
@@ -117,9 +115,7 @@ class TestGetLogOffset(TestCase):
             },
         }
         offset_in_metadata = sample_authlog_response["metadata"]["next_offset"]
-        producer_offset = Producer.get_log_offset(
-            sample_authlog_response.get("authlogs")[-1], log_type=Config.AUTH
-        )
+        producer_offset = Producer.get_log_offset(sample_authlog_response.get("authlogs")[-1], log_type=Config.AUTH)
         self.assertEqual(offset_in_metadata, producer_offset)
 
     def test_telephony_offset_value_producer(self):
@@ -159,9 +155,7 @@ class TestGetLogOffset(TestCase):
             },
         }
         offset_in_metadata = sample_telephony_response["metadata"]["next_offset"]
-        producer_offset = Producer.get_log_offset(
-            sample_telephony_response, log_type=Config.TELEPHONY
-        )
+        producer_offset = Producer.get_log_offset(sample_telephony_response, log_type=Config.TELEPHONY)
         self.assertEqual(offset_in_metadata, producer_offset)
 
     def test_telephony_offset_value_consumer(self):
@@ -184,9 +178,7 @@ class TestGetLogOffset(TestCase):
         telephony_id = sample_telephony_response.get("telephony_id")
         next_timestamp = int(next_timestamp_to_poll_from) + 1
         next_offset = f"{next_timestamp},{telephony_id}"
-        consumer_offset = Producer.get_log_offset(
-            sample_telephony_response, log_type=Config.TELEPHONY
-        )
+        consumer_offset = Producer.get_log_offset(sample_telephony_response, log_type=Config.TELEPHONY)
         self.assertEqual(next_offset, consumer_offset)
 
     def test_trust_monitor_offset_value_producer(self):
@@ -252,9 +244,7 @@ class TestGetLogOffset(TestCase):
             "metadata": {"next_offset": 2},
         }
         dtm_current_offset = dtm_response["metadata"]["next_offset"]
-        dtm_offset_to_set = Producer.get_log_offset(
-            dtm_response, log_type=Config.TRUST_MONITOR
-        )
+        dtm_offset_to_set = Producer.get_log_offset(dtm_response, log_type=Config.TRUST_MONITOR)
         self.assertEqual(dtm_current_offset, dtm_offset_to_set)
 
     def test_trust_monitor_offset_value_consumer(self):
@@ -310,9 +300,7 @@ class TestGetLogOffset(TestCase):
             "triaged_as_interesting": False,
             "type": "auth",
         }
-        dtm_offset_to_set = Producer.get_log_offset(
-            dtm_response, log_type=Config.TRUST_MONITOR
-        )
+        dtm_offset_to_set = Producer.get_log_offset(dtm_response, log_type=Config.TRUST_MONITOR)
         expected_offset = 1598034349060
         self.assertEqual(dtm_offset_to_set, expected_offset)
 
@@ -322,9 +310,7 @@ class TestGetLogOffset(TestCase):
             "metadata": {"next_offset": None, "total_objects": 94},
         }
         current_log_offset = ["1596815692352", "aecef809-a026-464f-9ba6-cc88920cd55d"]
-        new_log_offset = Producer.get_log_offset(
-            sample_authlog_response, current_log_offset
-        )
+        new_log_offset = Producer.get_log_offset(sample_authlog_response, current_log_offset)
         self.assertEqual(current_log_offset, new_log_offset)
 
     def test_dtm_offset_is_updated_when_no_logs_left_to_fetch(self):
@@ -389,9 +375,7 @@ class TestGetLogOffset(TestCase):
             ],
             "metadata": {},
         }
-        new_log_offset = Producer.get_log_offset(
-            dtm_response, log_type=Config.TRUST_MONITOR
-        )
+        new_log_offset = Producer.get_log_offset(dtm_response, log_type=Config.TRUST_MONITOR)
         expected_log_offset = dtm_response["events"][-1]["surfaced_timestamp"] + 1
         self.assertEqual(new_log_offset, expected_log_offset)
 
@@ -441,9 +425,7 @@ class TestGetLogOffset(TestCase):
             },
         }
         offset_in_metadata = sample_activity_response["metadata"]["next_offset"]
-        producer_offset = Producer.get_log_offset(
-            sample_activity_response, log_type=Config.ACTIVITY
-        )
+        producer_offset = Producer.get_log_offset(sample_activity_response, log_type=Config.ACTIVITY)
         self.assertEqual(offset_in_metadata, producer_offset)
 
     def test_activity_offset_value_consumer(self):
@@ -469,7 +451,5 @@ class TestGetLogOffset(TestCase):
         activity_id = sample_activity_response.get("activity_id")
         next_timestamp = int(next_timestamp_to_poll_from) + 1
         next_offset = f"{next_timestamp},{activity_id}"
-        consumer_offset = Producer.get_log_offset(
-            sample_activity_response, log_type=Config.ACTIVITY
-        )
+        consumer_offset = Producer.get_log_offset(sample_activity_response, log_type=Config.ACTIVITY)
         self.assertEqual(next_offset, consumer_offset)

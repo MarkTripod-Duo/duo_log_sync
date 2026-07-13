@@ -76,8 +76,13 @@ class Consumer:
                 # is the base class for all of these.
                 except OSError as conn_error:
                     err = extract_error_info(conn_error)
-                    shutdown_reason = (f"{self.log_type} consumer: connection error - [{conn_error} error_code: {err['error_code']}]")
-                    Program.log(f"{self.log_type} consumer: {type(conn_error).__name__} - connection to the destination server was reset or shutdown - error_message: {err['error_message']} error_code: {err['error_code']}\n{traceback.format_exc()}", logging.ERROR,)
+                    shutdown_reason = (
+                        f"{self.log_type} consumer: connection error - [{conn_error} error_code: {err['error_code']}]"
+                    )
+                    Program.log(
+                        f"{self.log_type} consumer: {type(conn_error).__name__} - connection to the destination server was reset or shutdown - error_message: {err['error_message']} error_code: {err['error_code']}\n{traceback.format_exc()}",
+                        logging.ERROR,
+                    )
                     Program.initiate_shutdown(shutdown_reason)
 
                 finally:
@@ -97,9 +102,7 @@ class Consumer:
                         current_log_offset=self.log_offset,
                         log_type=self.log_type,
                     )
-                    self.update_log_checkpoint(
-                        self.log_type, self.log_offset, self.child_account_id
-                    )
+                    self.update_log_checkpoint(self.log_type, self.log_offset, self.child_account_id)
             else:
                 Program.log(f"{self.log_type} consumer: No logs to write", logging.INFO)
 
@@ -134,13 +137,23 @@ class Consumer:
         @param log_offset   Information to save in the checkpoint file
         """
 
-        checkpoint_filename = f"{log_type}_checkpoint_data_" + child_account_id + ".txt" if child_account_id else f"{log_type}_checkpoint_data.txt"
+        checkpoint_filename = (
+            f"{log_type}_checkpoint_data_" + child_account_id + ".txt"
+            if child_account_id
+            else f"{log_type}_checkpoint_data.txt"
+        )
         checkpoint_file_path = os.path.join(Config.get_checkpoint_dir(), checkpoint_filename)
 
         if os.path.exists(checkpoint_file_path):
-            Program.log(f"{log_type} consumer: saving latest log offset '{log_offset}' to a checkpoint file '{checkpoint_file_path}'", logging.INFO)
+            Program.log(
+                f"{log_type} consumer: saving latest log offset '{log_offset}' to a checkpoint file '{checkpoint_file_path}'",
+                logging.INFO,
+            )
         else:
-            Program.log(f"{log_type} consumer: checkpoint file '{checkpoint_file_path}' doesn't exist and it will be created to save the latest offset '{log_offset}'", logging.INFO)
+            Program.log(
+                f"{log_type} consumer: checkpoint file '{checkpoint_file_path}' doesn't exist and it will be created to save the latest offset '{log_offset}'",
+                logging.INFO,
+            )
 
         # Open file checkpoint_filename in writing mode only
         checkpoint_file = open(checkpoint_file_path, "w")

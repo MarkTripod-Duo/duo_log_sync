@@ -2,14 +2,14 @@ import argparse
 import yaml
 
 # Constant values for changeset types
-ADD = 'ADD'
-MOVE = 'MOVE'
-EDIT = 'EDIT'
-DELETE = 'DELETE'
+ADD = "ADD"
+MOVE = "MOVE"
+EDIT = "EDIT"
+DELETE = "DELETE"
 
 # Latest version of config. Maybe keep this value in a central location like
 # __version__.py?
-CURRENT_CONFIG_VERSION = '1.0.0'
+CURRENT_CONFIG_VERSION = "1.0.0"
 
 # 'Patent pending', ingenius way to update config. Keep a list of changes
 # between config version updates, map the config version for the old config to
@@ -20,45 +20,40 @@ CURRENT_CONFIG_VERSION = '1.0.0'
 #   3. EDIT - make a change to value of an old config
 #   4. DELETE - delete a field
 CONFIG_CHANGESET = {
-    '0.0.0': {
+    "0.0.0": {
         ADD: {
-            ('logs', 'log_format'): 'JSON',
-            ('servers',): [{}],
-            ('transport', 'id'): 'Server 1',
-            ('duoclient', 'endpoint_server_mappings'): [{}],
-            ('duoclient', 'endpoint_server_mappings', 0, 'server'): 'Server 1'
+            ("logs", "log_format"): "JSON",
+            ("servers",): [{}],
+            ("transport", "id"): "Server 1",
+            ("duoclient", "endpoint_server_mappings"): [{}],
+            ("duoclient", "endpoint_server_mappings", 0, "server"): "Server 1",
         },
         MOVE: {
-            ('duoclient',): ('account',),
-            ('account', 'host'): ('account', 'hostname'),
-            ('logs', 'logDir'): ('logs', 'log_filepath'),
-            ('logs', 'endpoints', 'enabled'): (
-                'logs', 'endpoints', 'endpoints'),
-            ('logs', 'polling'): ('logs', 'api'),
-            ('logs', 'api', 'duration'): ('logs', 'api', 'timeout'),
-            ('logs', 'api', 'daysinpast'): ('logs', 'api', 'offset'),
-            ('logs', 'checkpointDir'): ('logs', 'directory'),
-            ('logs',): ('dls_settings',),
-            ('transport', 'host'): ('transport', 'hostname'),
-            ('transport', 'certFileDir'): ('transport', 'cert_filepath'),
-            ('recoverFromCheckpoint',): ('checkpointing',),
-            ('checkpointing',): ('dls_settings', 'checkpointing'),
-            ('dls_settings', 'directory'): (
-                'dls_settings', 'checkpointing', 'directory'),
-            ('dls_settings', 'endpoints', 'endpoints'): (
-                'account', 'endpoint_server_mappings', 0, 'endpoints'),
-            ('transport',): ('servers', 0)
+            ("duoclient",): ("account",),
+            ("account", "host"): ("account", "hostname"),
+            ("logs", "logDir"): ("logs", "log_filepath"),
+            ("logs", "endpoints", "enabled"): ("logs", "endpoints", "endpoints"),
+            ("logs", "polling"): ("logs", "api"),
+            ("logs", "api", "duration"): ("logs", "api", "timeout"),
+            ("logs", "api", "daysinpast"): ("logs", "api", "offset"),
+            ("logs", "checkpointDir"): ("logs", "directory"),
+            ("logs",): ("dls_settings",),
+            ("transport", "host"): ("transport", "hostname"),
+            ("transport", "certFileDir"): ("transport", "cert_filepath"),
+            ("recoverFromCheckpoint",): ("checkpointing",),
+            ("checkpointing",): ("dls_settings", "checkpointing"),
+            ("dls_settings", "directory"): ("dls_settings", "checkpointing", "directory"),
+            ("dls_settings", "endpoints", "endpoints"): ("account", "endpoint_server_mappings", 0, "endpoints"),
+            ("transport",): ("servers", 0),
         },
         EDIT: {
-            ('version',): (lambda _ : '1.0.0'),
-            ('dls_settings', 'api', 'timeout'): (lambda timeout : timeout * 60),
+            ("version",): (lambda _: "1.0.0"),
+            ("dls_settings", "api", "timeout"): (lambda timeout: timeout * 60),
         },
-        DELETE: [
-            ('dls_settings', 'endpoints'),
-            ('servers', 0, 'certFileName')
-        ]
+        DELETE: [("dls_settings", "endpoints"), ("servers", 0, "certFileName")],
     }
 }
+
 
 def main():
     """
@@ -68,24 +63,24 @@ def main():
     """
 
     arg_parser = argparse.ArgumentParser(
-        prog='Config Upgrader',
-        description='Automatically generate a new config from an old version')
+        prog="Config Upgrader", description="Automatically generate a new config from an old version"
+    )
 
     arg_parser.add_argument(
-        'old_config_path',
-        metavar='old_config_path',
-        type=str,
-        help='Path to the old config for upgrading')
+        "old_config_path", metavar="old_config_path", type=str, help="Path to the old config for upgrading"
+    )
 
     arg_parser.add_argument(
-        'new_config_path',
-        metavar='new_config_path',
+        "new_config_path",
+        metavar="new_config_path",
         type=str,
-        help='Filepath where the upgraded config file should be saved')
+        help="Filepath where the upgraded config file should be saved",
+    )
 
     args = arg_parser.parse_args()
     upgraded_config = upgrade_config(args.old_config_path)
     write_config(upgraded_config, args.new_config_path)
+
 
 def upgrade_config(old_config_path):
     """
@@ -102,22 +97,23 @@ def upgrade_config(old_config_path):
 
         # Both cert related parameters are optional in old config and may not exist. Initializing
         # those to '' so that upgrade script can work properly
-        if not config.get('transport').get('certFileDir'):
-            config['transport']['certFileDir'] = ''
+        if not config.get("transport").get("certFileDir"):
+            config["transport"]["certFileDir"] = ""
 
-        if not config.get('transport').get('certFileName'):
-            config['transport']['certFileName'] = ''
+        if not config.get("transport").get("certFileName"):
+            config["transport"]["certFileName"] = ""
 
         # Check if the config has a version, if it doesn't then it is the
         # oldest config, and give it a version of '0.0.0'
-        if not config.get('version', False):
-            config['version'] = '0.0.0'
+        if not config.get("version", False):
+            config["version"] = "0.0.0"
 
         # Apply changesets to the config until it is of the newest version
-        while config.get('version') != CURRENT_CONFIG_VERSION:
+        while config.get("version") != CURRENT_CONFIG_VERSION:
             config = apply_changeset(config)
 
     return config
+
 
 def write_config(config, config_path):
     """
@@ -128,8 +124,9 @@ def write_config(config, config_path):
     @param config_path  Location where config should be written to
     """
 
-    with open(config_path, 'w') as config_file:
+    with open(config_path, "w") as config_file:
         yaml.dump(config, config_file)
+
 
 def apply_changeset(config):
     """
@@ -141,7 +138,7 @@ def apply_changeset(config):
     @return a version of the config with the changeset applied
     """
 
-    version = config.get('version')
+    version = config.get("version")
     config = apply_hard_coded_changes(config, version)
 
     changeset = CONFIG_CHANGESET.get(version)
@@ -150,6 +147,7 @@ def apply_changeset(config):
     config = apply_edit_changeset(config, changeset.get(EDIT))
     config = apply_delete_changeset(config, changeset.get(DELETE))
     return config
+
 
 def apply_hard_coded_changes(config, version):
     """
@@ -163,17 +161,16 @@ def apply_hard_coded_changes(config, version):
     @return config with updates according to the version specified
     """
 
-    if version == '0.0.0':
-        slash = '/'
+    if version == "0.0.0":
+        slash = "/"
 
         # Catch the case where Windows paths exist
-        if '\\' in config['transport']['certFileDir']:
-            slash = '\\'
+        if "\\" in config["transport"]["certFileDir"]:
+            slash = "\\"
 
-        cert_filepath = config['transport']['certFileDir'] + slash + config[
-            'transport']['certFileName']
-        config['transport']['certFileDir'] = cert_filepath
-        config['logs']['logDir'] += slash + 'duologsync.log'
+        cert_filepath = config["transport"]["certFileDir"] + slash + config["transport"]["certFileName"]
+        config["transport"]["certFileDir"] = cert_filepath
+        config["logs"]["logDir"] += slash + "duologsync.log"
 
     return config
 
@@ -193,6 +190,7 @@ def apply_add_changeset(config, add_changeset):
         elem_to_add[keys[-1]] = value
 
     return config
+
 
 def apply_move_changeset(config, move_changeset):
     """
@@ -215,6 +213,7 @@ def apply_move_changeset(config, move_changeset):
 
     return config
 
+
 def apply_edit_changeset(config, edit_changeset):
     """
     Edit certain values within config as specified by the edit_changeset.
@@ -230,6 +229,7 @@ def apply_edit_changeset(config, edit_changeset):
         elem_to_edit[keys[-1]] = func(elem_to_edit[keys[-1]])
 
     return config
+
 
 def apply_delete_changeset(config, delete_changeset):
     """
@@ -264,5 +264,6 @@ def get_elem(dictionary, keys):
 
     return curr_elem
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

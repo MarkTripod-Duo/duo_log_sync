@@ -5,6 +5,7 @@ Definition of the TrustMonitorConsumer class
 from duologsync.config import Config
 from duologsync.consumer.consumer import Consumer
 
+
 class TrustMonitorConsumer(Consumer):
     """
     An implementation of the Consumer class for trust monitor logs

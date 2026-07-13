@@ -6,14 +6,14 @@ from duologsync.config import Config
 from duologsync.consumer.consumer import Consumer
 
 AUTHLOG_KEYS_TO_LABELS = {
-    ('access_device', 'host'): {'name': 'dhost', 'is_custom': False},
-    ('access_device', 'ip'): {'name': 'src', 'is_custom': False},
-    ('application', 'name'): {'name': 'integration', 'is_custom': True},
-    ('eventtype',): {'name': 'event_type', 'is_custom': True},
-    ('factor',): {'name': 'factor', 'is_custom': True},
-    ('result',): {'name': 'outcome', 'is_custom': False},
-    ('timestamp',): {'name': 'rt', 'is_custom': False},
-    ('user', 'name'): {'name': 'duser', 'is_custom': False}
+    ("access_device", "host"): {"name": "dhost", "is_custom": False},
+    ("access_device", "ip"): {"name": "src", "is_custom": False},
+    ("application", "name"): {"name": "integration", "is_custom": True},
+    ("eventtype",): {"name": "event_type", "is_custom": True},
+    ("factor",): {"name": "factor", "is_custom": True},
+    ("result",): {"name": "outcome", "is_custom": False},
+    ("timestamp",): {"name": "rt", "is_custom": False},
+    ("user", "name"): {"name": "duser", "is_custom": False},
 }
 
 

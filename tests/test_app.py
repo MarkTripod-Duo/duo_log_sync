@@ -60,9 +60,7 @@ class TestApp(TestCase):
         return_value=[{"account_id": "12345"}, {"account_id": "56789"}],
     )
     @patch("duologsync.app.create_consumer_producer_pair")
-    def test_create_tasks_one_server_multiple_endpoints_msp(
-        self, mock, mock_childaccount, mock_createadmin
-    ):
+    def test_create_tasks_one_server_multiple_endpoints_msp(self, mock, mock_childaccount, mock_createadmin):
         server_to_writer = {"Main": "writer_1"}
         config = {
             "dls_settings": {"proxy": {"proxy_server": "test.com", "proxy_port": 1234}},
@@ -169,20 +167,19 @@ class TestApp(TestCase):
 
 
 class TestValidateAndExit(TestCase):
-
     def test_validate_valid_config_exits_zero(self):
-        config_filepath = 'tests/resources/config_files/standard.yml'
+        config_filepath = "tests/resources/config_files/standard.yml"
         with self.assertRaises(SystemExit) as ctx:
             _validate_and_exit(config_filepath)
         self.assertEqual(ctx.exception.code, 0)
 
     def test_validate_bad_config_exits_one(self):
-        config_filepath = 'tests/resources/config_files/bad_config.yml'
+        config_filepath = "tests/resources/config_files/bad_config.yml"
         with self.assertRaises(SystemExit) as ctx:
             _validate_and_exit(config_filepath)
         self.assertEqual(ctx.exception.code, 1)
 
     def test_validate_missing_file_exits_one(self):
         with self.assertRaises(SystemExit) as ctx:
-            _validate_and_exit('nonexistent/path.yml')
+            _validate_and_exit("nonexistent/path.yml")
         self.assertEqual(ctx.exception.code, 1)

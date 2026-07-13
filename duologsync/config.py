@@ -25,23 +25,23 @@ class Config:
     """
 
     # Format type constants
-    CEF = 'CEF'
-    JSON = 'JSON'
+    CEF = "CEF"
+    JSON = "JSON"
 
     # Log type constants
-    AUTH = 'auth'
-    TELEPHONY = 'telephony'
-    TRUST_MONITOR = 'trustmonitor'
-    ACTIVITY = 'activity'
+    AUTH = "auth"
+    TELEPHONY = "telephony"
+    TRUST_MONITOR = "trustmonitor"
+    ACTIVITY = "activity"
 
-    DIRECTORY_DEFAULT = '/tmp'
-    LOG_FILEPATH_DEFAULT = DIRECTORY_DEFAULT + '/' + 'duologsync.log'
-    LOG_FORMAT_DEFAULT = 'JSON'
+    DIRECTORY_DEFAULT = "/tmp"
+    LOG_FILEPATH_DEFAULT = DIRECTORY_DEFAULT + "/" + "duologsync.log"
+    LOG_FORMAT_DEFAULT = "JSON"
     API_OFFSET_DEFAULT = 180
     API_TIMEOUT_DEFAULT = 120
     CHECKPOINTING_ENABLED_DEFAULT = True
     CHECKPOINTING_DIRECTORY_DEFAULT = DIRECTORY_DEFAULT
-    PROXY_SERVER_DEFAULT = ''
+    PROXY_SERVER_DEFAULT = ""
     PROXY_PORT_DEFAULT = 0
     FILE_OUTPUT_QUEUE_MAX_SIZE_DEFAULT = 5000
     FILE_OUTPUT_MAX_RETRIES_DEFAULT = 3
@@ -51,33 +51,33 @@ class Config:
     # Local file output rotation settings. 'none' preserves single-file
     # append behavior. 'size' rotates when the file exceeds max_bytes,
     # 'time' rotates on a daily boundary, 'both' rotates on either trigger.
-    FILE_OUTPUT_ROTATION_NONE = 'none'
-    FILE_OUTPUT_ROTATION_SIZE = 'size'
-    FILE_OUTPUT_ROTATION_TIME = 'time'
-    FILE_OUTPUT_ROTATION_BOTH = 'both'
+    FILE_OUTPUT_ROTATION_NONE = "none"
+    FILE_OUTPUT_ROTATION_SIZE = "size"
+    FILE_OUTPUT_ROTATION_TIME = "time"
+    FILE_OUTPUT_ROTATION_BOTH = "both"
     FILE_OUTPUT_ROTATION_DEFAULT = FILE_OUTPUT_ROTATION_NONE
     FILE_OUTPUT_MAX_BYTES_DEFAULT = 104857600  # 100 MiB
-    FILE_OUTPUT_ROTATION_INTERVAL_DEFAULT = 'daily'
+    FILE_OUTPUT_ROTATION_INTERVAL_DEFAULT = "daily"
     FILE_OUTPUT_BACKUP_COUNT_DEFAULT = 7
 
     GRACEFUL_RETRY_STATUS_CODES = (HTTPStatus.TOO_MANY_REQUESTS.value,)
 
     # JSON Schema for the endpoint_server_mapping items
     _ENDPOINT_SERVER_MAPPING_SCHEMA = {
-        'type': 'object',
-        'required': ['server', 'endpoints'],
-        'additionalProperties': False,
-        'properties': {
-            'server': {
-                'type': 'string',
-                'minLength': 1,
+        "type": "object",
+        "required": ["server", "endpoints"],
+        "additionalProperties": False,
+        "properties": {
+            "server": {
+                "type": "string",
+                "minLength": 1,
             },
-            'endpoints': {
-                'type': 'array',
-                'minItems': 1,
-                'items': {
-                    'type': 'string',
-                    'enum': [AUTH, TELEPHONY, TRUST_MONITOR, ACTIVITY],
+            "endpoints": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "type": "string",
+                    "enum": [AUTH, TELEPHONY, TRUST_MONITOR, ACTIVITY],
                 },
             },
         },
@@ -85,48 +85,48 @@ class Config:
 
     # JSON Schema for a single server entry
     _SERVER_SCHEMA = {
-        'type': 'object',
-        'required': ['id', 'protocol'],
-        'additionalProperties': False,
-        'properties': {
-            'id': {'type': 'string', 'minLength': 1},
-            'hostname': {'type': 'string', 'minLength': 1},
-            'port': {'type': 'integer', 'minimum': 0, 'maximum': 65535},
-            'protocol': {
-                'type': 'string',
-                'enum': ['TCP', 'TCPSSL', 'UDP', 'FILE'],
+        "type": "object",
+        "required": ["id", "protocol"],
+        "additionalProperties": False,
+        "properties": {
+            "id": {"type": "string", "minLength": 1},
+            "hostname": {"type": "string", "minLength": 1},
+            "port": {"type": "integer", "minimum": 0, "maximum": 65535},
+            "protocol": {
+                "type": "string",
+                "enum": ["TCP", "TCPSSL", "UDP", "FILE"],
             },
-            'cert_filepath': {'type': 'string', 'minLength': 1},
-            'filepath': {'type': 'string', 'minLength': 1},
+            "cert_filepath": {"type": "string", "minLength": 1},
+            "filepath": {"type": "string", "minLength": 1},
         },
-        'allOf': [
+        "allOf": [
             {
-                'if': {
-                    'properties': {'protocol': {'const': 'TCPSSL'}},
-                    'required': ['protocol'],
+                "if": {
+                    "properties": {"protocol": {"const": "TCPSSL"}},
+                    "required": ["protocol"],
                 },
-                'then': {
-                    'required': ['hostname', 'port', 'cert_filepath'],
+                "then": {
+                    "required": ["hostname", "port", "cert_filepath"],
                 },
             },
             {
-                'if': {
-                    'properties': {
-                        'protocol': {'enum': ['TCP', 'UDP']},
+                "if": {
+                    "properties": {
+                        "protocol": {"enum": ["TCP", "UDP"]},
                     },
-                    'required': ['protocol'],
+                    "required": ["protocol"],
                 },
-                'then': {
-                    'required': ['hostname', 'port'],
+                "then": {
+                    "required": ["hostname", "port"],
                 },
             },
             {
-                'if': {
-                    'properties': {'protocol': {'const': 'FILE'}},
-                    'required': ['protocol'],
+                "if": {
+                    "properties": {"protocol": {"const": "FILE"}},
+                    "required": ["protocol"],
                 },
-                'then': {
-                    'required': ['filepath'],
+                "then": {
+                    "required": ["filepath"],
                 },
             },
         ],
@@ -134,106 +134,105 @@ class Config:
 
     # Top-level JSON Schema
     SCHEMA = {
-        'type': 'object',
-        'required': ['version', 'servers', 'account'],
-        'additionalProperties': False,
-        'properties': {
-            'version': {'type': 'string', 'minLength': 1},
-            'dls_settings': {
-                'type': 'object',
-                'additionalProperties': False,
-                'properties': {
-                    'log_filepath': {'type': 'string', 'minLength': 1},
-                    'log_format': {
-                        'type': 'string',
-                        'enum': [CEF, JSON],
+        "type": "object",
+        "required": ["version", "servers", "account"],
+        "additionalProperties": False,
+        "properties": {
+            "version": {"type": "string", "minLength": 1},
+            "dls_settings": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "log_filepath": {"type": "string", "minLength": 1},
+                    "log_format": {
+                        "type": "string",
+                        "enum": [CEF, JSON],
                     },
-                    'api': {
-                        'type': 'object',
-                        'additionalProperties': False,
-                        'properties': {
-                            'offset': {
-                                'type': 'number',
-                                'minimum': 0,
-                                'maximum': 180,
+                    "api": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "offset": {
+                                "type": "number",
+                                "minimum": 0,
+                                "maximum": 180,
                             },
-                            'timeout': {'type': 'number'},
+                            "timeout": {"type": "number"},
                         },
                     },
-                    'checkpointing': {
-                        'type': 'object',
-                        'additionalProperties': False,
-                        'properties': {
-                            'enabled': {'type': 'boolean'},
-                            'directory': {'type': 'string', 'minLength': 1},
+                    "checkpointing": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "enabled": {"type": "boolean"},
+                            "directory": {"type": "string", "minLength": 1},
                         },
                     },
-                    'proxy': {
-                        'type': 'object',
-                        'additionalProperties': False,
-                        'properties': {
-                            'proxy_server': {'type': 'string'},
-                            'proxy_port': {'type': 'number'},
+                    "proxy": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "proxy_server": {"type": "string"},
+                            "proxy_port": {"type": "number"},
                         },
                     },
-                    'file_output': {
-                        'type': 'object',
-                        'additionalProperties': False,
-                        'properties': {
-                            'queue_max_size': {
-                                'type': 'integer',
-                                'minimum': 1,
+                    "file_output": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": {
+                            "queue_max_size": {
+                                "type": "integer",
+                                "minimum": 1,
                             },
-                            'max_retries': {
-                                'type': 'integer',
-                                'minimum': 0,
+                            "max_retries": {
+                                "type": "integer",
+                                "minimum": 0,
                             },
-                            'retry_backoff_seconds': {
-                                'type': 'number',
-                                'minimum': 0,
+                            "retry_backoff_seconds": {
+                                "type": "number",
+                                "minimum": 0,
                             },
-                            'enable_test_input': {'type': 'boolean'},
-                            'rotation': {
-                                'type': 'string',
-                                'enum': ['none', 'size', 'time', 'both'],
+                            "enable_test_input": {"type": "boolean"},
+                            "rotation": {
+                                "type": "string",
+                                "enum": ["none", "size", "time", "both"],
                             },
-                            'max_bytes': {
-                                'type': 'integer',
-                                'minimum': 1,
+                            "max_bytes": {
+                                "type": "integer",
+                                "minimum": 1,
                             },
-                            'rotation_interval': {
-                                'type': 'string',
-                                'enum': ['daily'],
+                            "rotation_interval": {
+                                "type": "string",
+                                "enum": ["daily"],
                             },
-                            'backup_count': {
-                                'type': 'integer',
-                                'minimum': 0,
+                            "backup_count": {
+                                "type": "integer",
+                                "minimum": 0,
                             },
                         },
                     },
                 },
             },
-            'servers': {
-                'type': 'array',
-                'minItems': 1,
-                'items': _SERVER_SCHEMA,
+            "servers": {
+                "type": "array",
+                "minItems": 1,
+                "items": _SERVER_SCHEMA,
             },
-            'account': {
-                'type': 'object',
-                'required': ['ikey', 'skey', 'hostname',
-                             'endpoint_server_mappings'],
-                'additionalProperties': False,
-                'properties': {
-                    'ikey': {'type': 'string', 'minLength': 1},
-                    'skey': {'type': 'string', 'minLength': 1},
-                    'hostname': {'type': 'string', 'minLength': 1},
-                    'endpoint_server_mappings': {
-                        'type': 'array',
-                        'minItems': 1,
-                        'items': _ENDPOINT_SERVER_MAPPING_SCHEMA,
+            "account": {
+                "type": "object",
+                "required": ["ikey", "skey", "hostname", "endpoint_server_mappings"],
+                "additionalProperties": False,
+                "properties": {
+                    "ikey": {"type": "string", "minLength": 1},
+                    "skey": {"type": "string", "minLength": 1},
+                    "hostname": {"type": "string", "minLength": 1},
+                    "endpoint_server_mappings": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": _ENDPOINT_SERVER_MAPPING_SCHEMA,
                     },
-                    'is_msp': {'type': 'boolean'},
-                    'block_list': {'type': 'array'},
+                    "is_msp": {"type": "boolean"},
+                    "block_list": {"type": "array"},
                 },
             },
         },
@@ -243,35 +242,35 @@ class Config:
     # config dict — nested dicts are recursed into, leaf values are used
     # as defaults for missing keys.
     _DEFAULTS = {
-        'dls_settings': {
-            'log_filepath': LOG_FILEPATH_DEFAULT,
-            'log_format': LOG_FORMAT_DEFAULT,
-            'api': {
-                'offset': API_OFFSET_DEFAULT,
-                'timeout': API_TIMEOUT_DEFAULT,
+        "dls_settings": {
+            "log_filepath": LOG_FILEPATH_DEFAULT,
+            "log_format": LOG_FORMAT_DEFAULT,
+            "api": {
+                "offset": API_OFFSET_DEFAULT,
+                "timeout": API_TIMEOUT_DEFAULT,
             },
-            'checkpointing': {
-                'enabled': CHECKPOINTING_ENABLED_DEFAULT,
-                'directory': CHECKPOINTING_DIRECTORY_DEFAULT,
+            "checkpointing": {
+                "enabled": CHECKPOINTING_ENABLED_DEFAULT,
+                "directory": CHECKPOINTING_DIRECTORY_DEFAULT,
             },
-            'proxy': {
-                'proxy_server': PROXY_SERVER_DEFAULT,
-                'proxy_port': PROXY_PORT_DEFAULT,
+            "proxy": {
+                "proxy_server": PROXY_SERVER_DEFAULT,
+                "proxy_port": PROXY_PORT_DEFAULT,
             },
-            'file_output': {
-                'queue_max_size': FILE_OUTPUT_QUEUE_MAX_SIZE_DEFAULT,
-                'max_retries': FILE_OUTPUT_MAX_RETRIES_DEFAULT,
-                'retry_backoff_seconds': FILE_OUTPUT_RETRY_BACKOFF_SECONDS_DEFAULT,
-                'enable_test_input': FILE_OUTPUT_TEST_INPUT_ENABLED_DEFAULT,
-                'rotation': FILE_OUTPUT_ROTATION_DEFAULT,
-                'max_bytes': FILE_OUTPUT_MAX_BYTES_DEFAULT,
-                'rotation_interval': FILE_OUTPUT_ROTATION_INTERVAL_DEFAULT,
-                'backup_count': FILE_OUTPUT_BACKUP_COUNT_DEFAULT,
+            "file_output": {
+                "queue_max_size": FILE_OUTPUT_QUEUE_MAX_SIZE_DEFAULT,
+                "max_retries": FILE_OUTPUT_MAX_RETRIES_DEFAULT,
+                "retry_backoff_seconds": FILE_OUTPUT_RETRY_BACKOFF_SECONDS_DEFAULT,
+                "enable_test_input": FILE_OUTPUT_TEST_INPUT_ENABLED_DEFAULT,
+                "rotation": FILE_OUTPUT_ROTATION_DEFAULT,
+                "max_bytes": FILE_OUTPUT_MAX_BYTES_DEFAULT,
+                "rotation_interval": FILE_OUTPUT_ROTATION_INTERVAL_DEFAULT,
+                "backup_count": FILE_OUTPUT_BACKUP_COUNT_DEFAULT,
             },
         },
-        'account': {
-            'is_msp': False,
-            'block_list': [],
+        "account": {
+            "is_msp": False,
+            "block_list": [],
         },
     }
 
@@ -291,7 +290,7 @@ class Config:
         if cls._config_is_set:
             return
 
-        raise RuntimeError('Cannot access values of config before setting it')
+        raise RuntimeError("Cannot access values of config before setting it")
 
     @classmethod
     def set_config(cls, config):
@@ -302,8 +301,7 @@ class Config:
                         instance variable
         """
         if cls._config_is_set:
-            raise RuntimeError('Config object already set. Cannot set Config '
-                               'object more than once')
+            raise RuntimeError("Config object already set. Cannot set Config object more than once")
 
         cls._config = config
         cls._config_is_set = True
@@ -328,126 +326,122 @@ class Config:
     @classmethod
     def get_config_file_path(cls):
         """@return the filepath of the config file"""
-        return cls.get_value(['config_file_path'])
+        return cls.get_value(["config_file_path"])
 
     @classmethod
     def get_log_filepath(cls):
         """@return the filepath where DLS program messages should be saved"""
-        return cls.get_value(['dls_settings', 'log_filepath'])
+        return cls.get_value(["dls_settings", "log_filepath"])
 
     @classmethod
     def get_log_format(cls):
         """@return how Duo logs should be formatted"""
-        return cls.get_value(['dls_settings', 'log_format'])
+        return cls.get_value(["dls_settings", "log_format"])
 
     @classmethod
     def get_api_offset(cls):
         """@return the timestamp from which record retrieval should begin"""
-        return cls.get_value(['dls_settings', 'api', 'offset'])
+        return cls.get_value(["dls_settings", "api", "offset"])
 
     @classmethod
     def get_api_timeout(cls):
         """@return the seconds to wait between API calls"""
-        return cls.get_value(['dls_settings', 'api', 'timeout'])
+        return cls.get_value(["dls_settings", "api", "timeout"])
 
     @classmethod
     def get_checkpointing_enabled(cls):
         """@return whether checkpoint files should be used to recover offsets"""
-        return cls.get_value(['dls_settings', 'checkpointing', 'enabled'])
+        return cls.get_value(["dls_settings", "checkpointing", "enabled"])
 
     @classmethod
     def get_checkpoint_dir(cls):
         """@return the directory where checkpoint files should be stored"""
-        return cls.get_value(
-            ['dls_settings', 'checkpointing', 'directory'])
+        return cls.get_value(["dls_settings", "checkpointing", "directory"])
 
     @classmethod
     def get_servers(cls):
         """@return the list of servers to which Duo logs will be written"""
-        return cls.get_value(['servers'])
+        return cls.get_value(["servers"])
 
     @classmethod
     def get_account_ikey(cls):
         """@return the ikey of the account in config"""
-        return cls.get_value(['account', 'ikey'])
+        return cls.get_value(["account", "ikey"])
 
     @classmethod
     def get_account_skey(cls):
         """@return the skey of the account in config"""
-        return cls.get_value(['account', 'skey'])
+        return cls.get_value(["account", "skey"])
 
     @classmethod
     def get_account_hostname(cls):
         """@return the hostname of the account in config"""
-        return cls.get_value(['account', 'hostname'])
+        return cls.get_value(["account", "hostname"])
 
     @classmethod
     def get_account_endpoint_server_mappings(cls):
         """@return the endpoint_server_mappings of the account in config"""
-        return cls.get_value(['account', 'endpoint_server_mappings'])
+        return cls.get_value(["account", "endpoint_server_mappings"])
 
     @classmethod
     def get_account_block_list(cls):
         """@return the block_list of the account in config"""
-        return cls.get_value(['account', 'block_list'])
+        return cls.get_value(["account", "block_list"])
 
     @classmethod
     def account_is_msp(cls):
         """@return whether the account in config is an MSP account"""
-        return cls.get_value(['account', 'is_msp'])
+        return cls.get_value(["account", "is_msp"])
 
     @classmethod
     def get_proxy_server(cls):
         """@return the proxy_server in config"""
-        return cls.get_value(['dls_settings', 'proxy', 'proxy_server'])
+        return cls.get_value(["dls_settings", "proxy", "proxy_server"])
 
     @classmethod
     def get_proxy_port(cls):
         """@return the proxy_port in config"""
-        return cls.get_value(['dls_settings', 'proxy', 'proxy_port'])
+        return cls.get_value(["dls_settings", "proxy", "proxy_port"])
 
     @classmethod
     def get_file_output_queue_max_size(cls):
         """@return max queue size for local file output"""
-        return cls.get_value(['dls_settings', 'file_output', 'queue_max_size'])
+        return cls.get_value(["dls_settings", "file_output", "queue_max_size"])
 
     @classmethod
     def get_file_output_max_retries(cls):
         """@return max write retry attempts for local file output"""
-        return cls.get_value(['dls_settings', 'file_output', 'max_retries'])
+        return cls.get_value(["dls_settings", "file_output", "max_retries"])
 
     @classmethod
     def get_file_output_retry_backoff_seconds(cls):
         """@return base backoff for local file output retries"""
-        return cls.get_value(
-            ['dls_settings', 'file_output', 'retry_backoff_seconds'])
+        return cls.get_value(["dls_settings", "file_output", "retry_backoff_seconds"])
 
     @classmethod
     def get_file_output_test_input_enabled(cls):
         """@return whether test-input injection is enabled"""
-        return cls.get_value(
-            ['dls_settings', 'file_output', 'enable_test_input'])
+        return cls.get_value(["dls_settings", "file_output", "enable_test_input"])
 
     @classmethod
     def get_file_output_rotation(cls):
         """@return the rotation mode for local file output"""
-        return cls.get_value(['dls_settings', 'file_output', 'rotation'])
+        return cls.get_value(["dls_settings", "file_output", "rotation"])
 
     @classmethod
     def get_file_output_max_bytes(cls):
         """@return the size threshold (bytes) that triggers rotation"""
-        return cls.get_value(['dls_settings', 'file_output', 'max_bytes'])
+        return cls.get_value(["dls_settings", "file_output", "max_bytes"])
 
     @classmethod
     def get_file_output_rotation_interval(cls):
         """@return the time-based rotation interval for local file output"""
-        return cls.get_value(
-            ['dls_settings', 'file_output', 'rotation_interval'])
+        return cls.get_value(["dls_settings", "file_output", "rotation_interval"])
 
     @classmethod
     def get_file_output_backup_count(cls):
         """@return the number of rotated files to retain"""
-        return cls.get_value(['dls_settings', 'file_output', 'backup_count'])
+        return cls.get_value(["dls_settings", "file_output", "backup_count"])
 
     @classmethod
     def validate_config(cls, config_filepath):
@@ -474,41 +468,32 @@ class Config:
             with open(config_filepath) as config_file:
                 config_file_data = config_file.read()
         except OSError as os_error:
-            errors.append(
-                f"Failed to open config file: {os_error}"
-            )
+            errors.append(f"Failed to open config file: {os_error}")
             return errors, warnings
 
         # 2. Parse YAML
         try:
             config = yaml.full_load(config_file_data)
         except YAMLError as yaml_error:
-            errors.append(
-                f"Failed to parse YAML: {yaml_error}"
-            )
+            errors.append(f"Failed to parse YAML: {yaml_error}")
             return errors, warnings
 
         if not isinstance(config, dict):
-            errors.append(
-                "Config file must contain a YAML mapping (dictionary) at "
-                "the top level"
-            )
+            errors.append("Config file must contain a YAML mapping (dictionary) at the top level")
             return errors, warnings
 
         # 3. Validate against JSON Schema
         try:
             validate(instance=config, schema=cls.SCHEMA)
         except ValidationError as error:
-            path = ' -> '.join(str(p) for p in error.absolute_path) if error.absolute_path else '(root)'
-            errors.append(
-                f"Schema validation error at '{path}': {error.message}"
-            )
+            path = " -> ".join(str(p) for p in error.absolute_path) if error.absolute_path else "(root)"
+            errors.append(f"Schema validation error at '{path}': {error.message}")
             return errors, warnings
 
         # 4. Apply defaults and check business rules
         cls._apply_defaults(config, cls._DEFAULTS)
 
-        api_timeout = config.get('dls_settings', {}).get('api', {}).get('timeout')
+        api_timeout = config.get("dls_settings", {}).get("api", {}).get("timeout")
         if api_timeout is not None and api_timeout < cls.API_TIMEOUT_DEFAULT:
             warnings.append(
                 f"API timeout ({api_timeout}s) is below the minimum "
@@ -538,36 +523,35 @@ class Config:
                 # Check config against a schema to ensure all the needed fields
                 # and values are defined
                 config = cls._validate_and_normalize_config(config)
-                api_timeout = config.get('dls_settings', {}).get('api', {}).get('timeout')
+                api_timeout = config.get("dls_settings", {}).get("api", {}).get("timeout")
                 if api_timeout is not None and api_timeout < cls.API_TIMEOUT_DEFAULT:
-                    config['dls_settings']['api']['timeout'] = cls.API_TIMEOUT_DEFAULT
-                    Program.log(f'DuoLogSync: Setting default api timeout to {cls.API_TIMEOUT_DEFAULT} seconds.')
-                config['config_file_path'] = config_filepath
+                    config["dls_settings"]["api"]["timeout"] = cls.API_TIMEOUT_DEFAULT
+                    Program.log(f"DuoLogSync: Setting default api timeout to {cls.API_TIMEOUT_DEFAULT} seconds.")
+                config["config_file_path"] = config_filepath
 
         # Will occur when given a bad filepath or a bad file
         except OSError as os_error:
             shutdown_reason = f"{os_error}"
-            Program.log('DuoLogSync: Failed to open the config file. Check '
-                        'that the filename is correct')
+            Program.log("DuoLogSync: Failed to open the config file. Check that the filename is correct")
 
         # Will occur if the config file does not contain valid YAML
         except YAMLError as yaml_error:
             shutdown_reason = f"{yaml_error}"
-            Program.log('DuoLogSync: Failed to parse the config file. Check '
-                        'that the config file has valid YAML.')
+            Program.log("DuoLogSync: Failed to parse the config file. Check that the config file has valid YAML.")
 
         # Validation of the config against a schema failed
         except ValueError as val_error:
             shutdown_reason = f"{val_error}"
-            Program.log('DuoLogSync: Validation of the config file failed. '
-                        'Check that required fields have proper values.')
+            Program.log(
+                "DuoLogSync: Validation of the config file failed. Check that required fields have proper values."
+            )
 
         # No exception raised during the try block, return config
         else:
             # Calculate offset as a timestamp and rewrite its value in config
-            offset = config.get('dls_settings', {}).get('api', {}).get('offset', cls.API_OFFSET_DEFAULT)
+            offset = config.get("dls_settings", {}).get("api", {}).get("offset", cls.API_OFFSET_DEFAULT)
             offset = datetime.now(timezone.utc) - timedelta(days=offset)
-            config['dls_settings']['api']['offset'] = int(offset.timestamp())
+            config["dls_settings"]["api"]["offset"] = int(offset.timestamp())
             return config
 
         # At this point, it is guaranteed that an exception was raised, which

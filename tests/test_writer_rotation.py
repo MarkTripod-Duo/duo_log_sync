@@ -34,9 +34,7 @@ def _record(index):
 
 def _rotated_files(writer):
     pattern = f"{writer.filepath.name}.*"
-    return sorted(
-        path for path in writer.filepath.parent.glob(pattern) if path.is_file()
-    )
+    return sorted(path for path in writer.filepath.parent.glob(pattern) if path.is_file())
 
 
 class TestLocalFileWriterRotation(unittest.TestCase):
@@ -48,16 +46,12 @@ class TestLocalFileWriterRotation(unittest.TestCase):
 
             self.assertTrue(writer.filepath.exists())
             self.assertEqual(_rotated_files(writer), [])
-            self.assertEqual(
-                writer.filepath.read_bytes().count(b"\n"), 20
-            )
+            self.assertEqual(writer.filepath.read_bytes().count(b"\n"), 20)
 
     def test_size_rotation_preserves_all_data(self):
         with tempfile.TemporaryDirectory() as directory:
             # Large backup_count so nothing is pruned -> all data retained.
-            writer = _make_writer(
-                directory, rotation="size", max_bytes=10, backup_count=100
-            )
+            writer = _make_writer(directory, rotation="size", max_bytes=10, backup_count=100)
             total = 25
             for index in range(total):
                 writer._write_to_file(_record(index))
@@ -74,9 +68,7 @@ class TestLocalFileWriterRotation(unittest.TestCase):
 
     def test_backup_count_prunes_oldest(self):
         with tempfile.TemporaryDirectory() as directory:
-            writer = _make_writer(
-                directory, rotation="size", max_bytes=10, backup_count=3
-            )
+            writer = _make_writer(directory, rotation="size", max_bytes=10, backup_count=3)
             for index in range(30):
                 writer._write_to_file(_record(index))
 
@@ -87,9 +79,7 @@ class TestLocalFileWriterRotation(unittest.TestCase):
 
     def test_backup_count_zero_deletes_all_rotated(self):
         with tempfile.TemporaryDirectory() as directory:
-            writer = _make_writer(
-                directory, rotation="size", max_bytes=10, backup_count=0
-            )
+            writer = _make_writer(directory, rotation="size", max_bytes=10, backup_count=0)
             for index in range(10):
                 writer._write_to_file(_record(index))
 
@@ -98,18 +88,14 @@ class TestLocalFileWriterRotation(unittest.TestCase):
 
     def test_empty_file_is_not_rotated(self):
         with tempfile.TemporaryDirectory() as directory:
-            writer = _make_writer(
-                directory, rotation="size", max_bytes=1, backup_count=5
-            )
+            writer = _make_writer(directory, rotation="size", max_bytes=1, backup_count=5)
             # First write into an empty/absent file must not rotate.
             writer._write_to_file(_record(0))
             self.assertEqual(_rotated_files(writer), [])
 
     def test_time_rotation_on_day_boundary(self):
         with tempfile.TemporaryDirectory() as directory:
-            writer = _make_writer(
-                directory, rotation="time", backup_count=5
-            )
+            writer = _make_writer(directory, rotation="time", backup_count=5)
             # Seed a non-empty file dated yesterday.
             writer._append_bytes(_record(0))
             yesterday = datetime.now() - timedelta(days=1)
@@ -127,9 +113,7 @@ class TestLocalFileWriterRotation(unittest.TestCase):
 
     def test_time_rotation_same_day_does_not_rotate(self):
         with tempfile.TemporaryDirectory() as directory:
-            writer = _make_writer(
-                directory, rotation="time", backup_count=5
-            )
+            writer = _make_writer(directory, rotation="time", backup_count=5)
             writer._write_to_file(_record(0))
             writer._write_to_file(_record(1))
             # Same-day writes stay in one file.

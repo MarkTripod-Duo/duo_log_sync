@@ -8,6 +8,7 @@ from duologsync.program import Program
 def running_is_false(msg):
     Program._running = False
 
+
 class TestConfig(TestCase):
     def tearDown(self):
         Config._config = None
@@ -15,15 +16,15 @@ class TestConfig(TestCase):
         Program._running = True
 
     def test_set_config_normal(self):
-        config = {'field_one': {'nested_field': True}, 'field_two': 100}
+        config = {"field_one": {"nested_field": True}, "field_two": 100}
 
         Config.set_config(config)
 
-        self.assertEqual(Config._config['field_one']['nested_field'], True)
-        self.assertEqual(Config._config['field_two'], 100)
+        self.assertEqual(Config._config["field_one"]["nested_field"], True)
+        self.assertEqual(Config._config["field_two"], 100)
 
     def test_set_config_twice(self):
-        config = {'field_one': {'nested_field': True}, 'field_two': 100}
+        config = {"field_one": {"nested_field": True}, "field_two": 100}
 
         Config.set_config(config)
 
@@ -31,47 +32,47 @@ class TestConfig(TestCase):
             Config.set_config(config)
 
     def test_get_value_normal(self):
-        config = {'field_one': {'nested_field': True}, 'field_two': 100}
+        config = {"field_one": {"nested_field": True}, "field_two": 100}
 
         Config.set_config(config)
-        value_one = Config.get_value(['field_one', 'nested_field'])
-        value_two = Config.get_value(['field_two'])
+        value_one = Config.get_value(["field_one", "nested_field"])
+        value_two = Config.get_value(["field_two"])
 
         self.assertEqual(value_one, True)
         self.assertEqual(value_two, 100)
 
     def test_get_value_before_setting_config(self):
-        config = {'field_one': {'nested_field': True}, 'field_two': 100}
+        config = {"field_one": {"nested_field": True}, "field_two": 100}
 
         with self.assertRaises(RuntimeError):
-            Config.get_value(['field_one', 'nested_field'])
+            Config.get_value(["field_one", "nested_field"])
 
     def test_get_value_with_invalid_keys(self):
-        config = {'field_one': {'nested_field': True}, 'field_two': 100}
+        config = {"field_one": {"nested_field": True}, "field_two": 100}
 
         Config.set_config(config)
 
         with self.assertRaises(ValueError):
-            Config.get_value(['house_key', 'car_key'])
+            Config.get_value(["house_key", "car_key"])
 
     def test_get_log_filepath(self):
-        config = {'dls_settings': {'log_filepath': '/dev/null'}}
+        config = {"dls_settings": {"log_filepath": "/dev/null"}}
 
         Config.set_config(config)
         log_filepath = Config.get_log_filepath()
 
-        self.assertEqual(log_filepath, '/dev/null')
+        self.assertEqual(log_filepath, "/dev/null")
 
     def test_get_log_format(self):
-        config = {'dls_settings': {'log_format': 'JSON'}}
+        config = {"dls_settings": {"log_format": "JSON"}}
 
         Config.set_config(config)
         log_format = Config.get_log_format()
 
-        self.assertEqual(log_format, 'JSON')
+        self.assertEqual(log_format, "JSON")
 
     def test_get_checkpointing_enabled(self):
-        config = {'dls_settings': {'checkpointing': {'enabled': False}}}
+        config = {"dls_settings": {"checkpointing": {"enabled": False}}}
 
         Config.set_config(config)
         checkpointing_enabled = Config.get_checkpointing_enabled()
@@ -79,55 +80,55 @@ class TestConfig(TestCase):
         self.assertEqual(checkpointing_enabled, False)
 
     def test_get_checkpoint_dir(self):
-        config = {'dls_settings': {'checkpointing': {'directory': '/tmp'}}}
+        config = {"dls_settings": {"checkpointing": {"directory": "/tmp"}}}
 
         Config.set_config(config)
         checkpoint_dir = Config.get_checkpoint_dir()
 
-        self.assertEqual(checkpoint_dir, '/tmp')
+        self.assertEqual(checkpoint_dir, "/tmp")
 
     def test_get_servers(self):
-        config = {'servers': ['item1', 'item2']}
+        config = {"servers": ["item1", "item2"]}
 
         Config.set_config(config)
         servers = Config.get_servers()
 
-        self.assertEqual(servers, ['item1', 'item2'])
+        self.assertEqual(servers, ["item1", "item2"])
 
     def test_get_account_ikey(self):
-        config = {'account': {'ikey': 'ASDFF'}}
+        config = {"account": {"ikey": "ASDFF"}}
 
         Config.set_config(config)
         ikey = Config.get_account_ikey()
 
-        self.assertEqual(ikey, 'ASDFF')
+        self.assertEqual(ikey, "ASDFF")
 
     def test_get_account_skey(self):
-        config = {'account': {'skey': 'PASSWORD'}}
+        config = {"account": {"skey": "PASSWORD"}}
 
         Config.set_config(config)
         skey = Config.get_account_skey()
 
-        self.assertEqual(skey, 'PASSWORD')
+        self.assertEqual(skey, "PASSWORD")
 
     def test_get_account_hostname(self):
-        config = {'account': {'hostname': 'internet.com'}}
+        config = {"account": {"hostname": "internet.com"}}
 
         Config.set_config(config)
         hostname = Config.get_account_hostname()
 
-        self.assertEqual(hostname, 'internet.com')
+        self.assertEqual(hostname, "internet.com")
 
     def test_get_account_endpoint_server_mappings(self):
-        config = {'account': {'endpoint_server_mappings': {'auth': 'ha.com'}}}
+        config = {"account": {"endpoint_server_mappings": {"auth": "ha.com"}}}
 
         Config.set_config(config)
         endpoint_server_mappings = Config.get_account_endpoint_server_mappings()
 
-        self.assertEqual(endpoint_server_mappings, {'auth': 'ha.com'})
+        self.assertEqual(endpoint_server_mappings, {"auth": "ha.com"})
 
     def test_account_is_msp(self):
-        config = {'account': {'is_msp': False}}
+        config = {"account": {"is_msp": False}}
 
         Config.set_config(config)
         is_msp = Config.account_is_msp()
@@ -135,184 +136,149 @@ class TestConfig(TestCase):
         self.assertEqual(is_msp, False)
 
     def test_get_account_block_list(self):
-        config = {'account': {'block_list': ['thing1', 'blue fish']}}
+        config = {"account": {"block_list": ["thing1", "blue fish"]}}
 
         Config.set_config(config)
         block_list = Config.get_account_block_list()
 
-        self.assertEqual(block_list, ['thing1', 'blue fish'])
+        self.assertEqual(block_list, ["thing1", "blue fish"])
 
     def test_create_config_normal(self):
-        config_filepath = 'tests/resources/config_files/standard.yml'
+        config_filepath = "tests/resources/config_files/standard.yml"
         correct_config = {
-            'config_file_path': config_filepath,
-            'version': '1.0.0',
-            'dls_settings': {
-                'log_filepath': '/tmp/duologsync.log',
-                'log_format': 'JSON',
-                'api': {
-                    'offset': 180,
-                    'timeout': 120
+            "config_file_path": config_filepath,
+            "version": "1.0.0",
+            "dls_settings": {
+                "log_filepath": "/tmp/duologsync.log",
+                "log_format": "JSON",
+                "api": {"offset": 180, "timeout": 120},
+                "checkpointing": {"enabled": False, "directory": "/tmp/dls_checkpoints"},
+                "proxy": {"proxy_server": "test.com", "proxy_port": 1234},
+                "file_output": {
+                    "queue_max_size": 5000,
+                    "max_retries": 3,
+                    "retry_backoff_seconds": 0.2,
+                    "enable_test_input": False,
+                    "rotation": "none",
+                    "max_bytes": 104857600,
+                    "rotation_interval": "daily",
+                    "backup_count": 7,
                 },
-                'checkpointing': {
-                    'enabled': False,
-                    'directory': '/tmp/dls_checkpoints'
-                },
-                'proxy': {
-                    'proxy_server': 'test.com',
-                    'proxy_port': 1234
-                        },
-                    'file_output': {
-                            'queue_max_size': 5000,
-                            'max_retries': 3,
-                            'retry_backoff_seconds': 0.2,
-                            'enable_test_input': False,
-                            'rotation': 'none',
-                            'max_bytes': 104857600,
-                            'rotation_interval': 'daily',
-                            'backup_count': 7
-                }
             },
-            'servers': [
+            "servers": [
                 {
-                    'id': 'main server',
-                    'hostname': 'mysiem.com',
-                    'port': 8888,
-                    'protocol': 'TCPSSL',
-                    'cert_filepath': 'cert.crt'
+                    "id": "main server",
+                    "hostname": "mysiem.com",
+                    "port": 8888,
+                    "protocol": "TCPSSL",
+                    "cert_filepath": "cert.crt",
                 },
-                {
-                    'id': 'backup',
-                    'hostname': 'safesiem.org',
-                    'port': 13031,
-                    'protocol': 'UDP'
-                }
+                {"id": "backup", "hostname": "safesiem.org", "port": 13031, "protocol": "UDP"},
             ],
-            'account': {
-                'ikey': 'AAA101020K12K1K23',
-                'skey': 'jyJKYAGJKAYGDKJgyJygFUg9F9gyFuo9',
-                'hostname': 'api-test.first.duosecurity.com',
-                'endpoint_server_mappings': [
-                    {
-                        'endpoints': ['auth'],
-                        'server': 'main server'
-                    },
-                    {
-                        'endpoints': ['telephony'],
-                        'server': 'backup'
-                    }
+            "account": {
+                "ikey": "AAA101020K12K1K23",
+                "skey": "jyJKYAGJKAYGDKJgyJygFUg9F9gyFuo9",
+                "hostname": "api-test.first.duosecurity.com",
+                "endpoint_server_mappings": [
+                    {"endpoints": ["auth"], "server": "main server"},
+                    {"endpoints": ["telephony"], "server": "backup"},
                 ],
-                'is_msp': True,
-                'block_list': []
-            }
+                "is_msp": True,
+                "block_list": [],
+            },
         }
 
         config = Config.create_config(config_filepath)
-        config['dls_settings']['api']['offset'] = 180
+        config["dls_settings"]["api"]["offset"] = 180
 
         self.assertEqual(correct_config, config)
 
-    @patch('duologsync.program.Program.initiate_shutdown')
+    @patch("duologsync.program.Program.initiate_shutdown")
     def test_create_config_bad_filepath(self, mock_initiate_shutdown):
-        config_filepath = 'absolute/nonsense/this/goes/nowhere.yml'
+        config_filepath = "absolute/nonsense/this/goes/nowhere.yml"
 
         Config.create_config(config_filepath)
 
         mock_initiate_shutdown.assert_called_once()
 
-    @patch('duologsync.program.Program.initiate_shutdown')
+    @patch("duologsync.program.Program.initiate_shutdown")
     def test_create_config_invalid_yaml(self, mock_initiate_shutdown):
-        config_filepath = 'tests/resources/config_files/bad_yaml.yml'
+        config_filepath = "tests/resources/config_files/bad_yaml.yml"
 
         Config.create_config(config_filepath)
 
         mock_initiate_shutdown.assert_called_once()
 
-    @patch('duologsync.program.Program.initiate_shutdown',
-           side_effect=running_is_false)
+    @patch("duologsync.program.Program.initiate_shutdown", side_effect=running_is_false)
     def test_create_config_invalid_config(self, mock_initiate_shutdown):
-        config_filepath = 'tests/resources/config_files/bad_config.yml'
+        config_filepath = "tests/resources/config_files/bad_config.yml"
 
         Config.create_config(config_filepath)
 
         mock_initiate_shutdown.assert_called_once()
 
-    @patch('duologsync.program.Program.initiate_shutdown',
-           side_effect=running_is_false)
+    @patch("duologsync.program.Program.initiate_shutdown", side_effect=running_is_false)
     def test_create_config_with_bad_values(self, mock_initiate_shutdown):
-        config_filepath = 'tests/resources/config_files/bad_values.yml'
+        config_filepath = "tests/resources/config_files/bad_values.yml"
 
         config = Config.create_config(config_filepath)
 
         mock_initiate_shutdown.assert_called_once()
 
     def test_create_config_with_no_defaults_set(self):
-        config_filepath = 'tests/resources/config_files/no_defaults_set.yml'
+        config_filepath = "tests/resources/config_files/no_defaults_set.yml"
 
         config = Config.create_config(config_filepath)
 
-        self.assertNotEqual(config['dls_settings']['log_filepath'], None)
-        self.assertNotEqual(config['dls_settings']['log_format'], None)
-        self.assertNotEqual(config['dls_settings']['api']['offset'], None)
-        self.assertNotEqual(config['dls_settings']['api']['timeout'], None)
-        self.assertNotEqual(
-            config['dls_settings']['checkpointing']['enabled'], None)
-        self.assertNotEqual(
-            config['dls_settings']['checkpointing']['directory'], None)
-        self.assertNotEqual(
-                config['dls_settings']['file_output']['queue_max_size'], None
-                )
-        self.assertNotEqual(
-                config['dls_settings']['file_output']['max_retries'], None
-                )
-        self.assertNotEqual(
-                config['dls_settings']['file_output']['retry_backoff_seconds'], None
-                )
-        self.assertNotEqual(
-                config['dls_settings']['file_output']['enable_test_input'], None
-                )
-        self.assertNotEqual(config['account']['is_msp'], None)
-        self.assertNotEqual(config['account']['block_list'], None)
+        self.assertNotEqual(config["dls_settings"]["log_filepath"], None)
+        self.assertNotEqual(config["dls_settings"]["log_format"], None)
+        self.assertNotEqual(config["dls_settings"]["api"]["offset"], None)
+        self.assertNotEqual(config["dls_settings"]["api"]["timeout"], None)
+        self.assertNotEqual(config["dls_settings"]["checkpointing"]["enabled"], None)
+        self.assertNotEqual(config["dls_settings"]["checkpointing"]["directory"], None)
+        self.assertNotEqual(config["dls_settings"]["file_output"]["queue_max_size"], None)
+        self.assertNotEqual(config["dls_settings"]["file_output"]["max_retries"], None)
+        self.assertNotEqual(config["dls_settings"]["file_output"]["retry_backoff_seconds"], None)
+        self.assertNotEqual(config["dls_settings"]["file_output"]["enable_test_input"], None)
+        self.assertNotEqual(config["account"]["is_msp"], None)
+        self.assertNotEqual(config["account"]["block_list"], None)
 
     def test_create_config_file_output_protocol(self):
-        config_filepath = 'tests/resources/config_files/file_output.yml'
+        config_filepath = "tests/resources/config_files/file_output.yml"
 
         config = Config.create_config(config_filepath)
 
-        server = config['servers'][0]
+        server = config["servers"][0]
 
-        self.assertEqual(server['protocol'], 'FILE')
-        self.assertEqual(server['filepath'], '/tmp/duologsync-events.log')
-        self.assertEqual(config['dls_settings']['file_output']['queue_max_size'], 100)
-        self.assertEqual(config['dls_settings']['file_output']['max_retries'], 2)
-        self.assertEqual(config['dls_settings']['file_output']['retry_backoff_seconds'], 0.01)
-        self.assertEqual(config['dls_settings']['file_output']['enable_test_input'], True)
+        self.assertEqual(server["protocol"], "FILE")
+        self.assertEqual(server["filepath"], "/tmp/duologsync-events.log")
+        self.assertEqual(config["dls_settings"]["file_output"]["queue_max_size"], 100)
+        self.assertEqual(config["dls_settings"]["file_output"]["max_retries"], 2)
+        self.assertEqual(config["dls_settings"]["file_output"]["retry_backoff_seconds"], 0.01)
+        self.assertEqual(config["dls_settings"]["file_output"]["enable_test_input"], True)
 
-    @patch('duologsync.program.Program.initiate_shutdown')
+    @patch("duologsync.program.Program.initiate_shutdown")
     def test_create_config_file_output_missing_filepath(self, mock_initiate_shutdown):
-        config_filepath = 'tests/resources/config_files/file_output_missing_filepath.yml'
+        config_filepath = "tests/resources/config_files/file_output_missing_filepath.yml"
 
         Config.create_config(config_filepath)
 
         mock_initiate_shutdown.assert_called_once()
 
     def test_get_value_from_keys_normal(self):
-        dictionary = {'level_one': '2FA',
-                      'access_device': {'ip': '192.168.0.1'}}
+        dictionary = {"level_one": "2FA", "access_device": {"ip": "192.168.0.1"}}
 
-        value_one = Config.get_value_from_keys(dictionary, ('level_one',))
-        value_two = Config.get_value_from_keys(dictionary,
-                                               ('access_device', 'ip'))
+        value_one = Config.get_value_from_keys(dictionary, ("level_one",))
+        value_two = Config.get_value_from_keys(dictionary, ("access_device", "ip"))
 
-        self.assertEqual(value_one, '2FA')
-        self.assertEqual(value_two, '192.168.0.1')
+        self.assertEqual(value_one, "2FA")
+        self.assertEqual(value_two, "192.168.0.1")
 
     def test_get_value_from_keys_bad_keys(self):
-        dictionary = {'house': {'bedrooms': 2}}
+        dictionary = {"house": {"bedrooms": 2}}
 
-        value_one = Config.get_value_from_keys(dictionary, ('hoose'))
-        value_two = Config.get_value_from_keys(dictionary,
-                                               ('house', 'badrooms'))
+        value_one = Config.get_value_from_keys(dictionary, ("hoose"))
+        value_two = Config.get_value_from_keys(dictionary, ("house", "badrooms"))
 
         self.assertEqual(value_one, None)
         self.assertEqual(value_two, None)
@@ -320,40 +286,40 @@ class TestConfig(TestCase):
     # --- validate_config tests ---
 
     def test_validate_config_valid_file(self):
-        config_filepath = 'tests/resources/config_files/standard.yml'
+        config_filepath = "tests/resources/config_files/standard.yml"
         errors, warnings = Config.validate_config(config_filepath)
         self.assertEqual(errors, [])
         self.assertEqual(warnings, [])
 
     def test_validate_config_bad_filepath(self):
-        errors, warnings = Config.validate_config('nonexistent/path.yml')
+        errors, warnings = Config.validate_config("nonexistent/path.yml")
         self.assertEqual(len(errors), 1)
-        self.assertIn('Failed to open config file', errors[0])
+        self.assertIn("Failed to open config file", errors[0])
 
     def test_validate_config_bad_yaml(self):
-        config_filepath = 'tests/resources/config_files/bad_yaml.yml'
+        config_filepath = "tests/resources/config_files/bad_yaml.yml"
         errors, warnings = Config.validate_config(config_filepath)
         self.assertEqual(len(errors), 1)
-        self.assertIn('Failed to parse YAML', errors[0])
+        self.assertIn("Failed to parse YAML", errors[0])
 
     def test_validate_config_bad_config(self):
-        config_filepath = 'tests/resources/config_files/bad_config.yml'
+        config_filepath = "tests/resources/config_files/bad_config.yml"
         errors, warnings = Config.validate_config(config_filepath)
         self.assertTrue(len(errors) > 0)
-        self.assertIn('Schema validation error', errors[0])
+        self.assertIn("Schema validation error", errors[0])
 
     def test_validate_config_bad_values(self):
-        config_filepath = 'tests/resources/config_files/bad_values.yml'
+        config_filepath = "tests/resources/config_files/bad_values.yml"
         errors, warnings = Config.validate_config(config_filepath)
         self.assertTrue(len(errors) > 0)
 
     def test_validate_config_file_output_missing_filepath(self):
-        config_filepath = 'tests/resources/config_files/file_output_missing_filepath.yml'
+        config_filepath = "tests/resources/config_files/file_output_missing_filepath.yml"
         errors, warnings = Config.validate_config(config_filepath)
         self.assertTrue(len(errors) > 0)
 
     def test_validate_config_no_defaults_set(self):
-        config_filepath = 'tests/resources/config_files/no_defaults_set.yml'
+        config_filepath = "tests/resources/config_files/no_defaults_set.yml"
         errors, warnings = Config.validate_config(config_filepath)
         self.assertEqual(errors, [])
 
@@ -380,13 +346,13 @@ dls_settings:
   api:
     timeout: 10
 """
-        fd, tmppath = tempfile.mkstemp(suffix='.yml')
+        fd, tmppath = tempfile.mkstemp(suffix=".yml")
         try:
-            with os.fdopen(fd, 'w') as f:
+            with os.fdopen(fd, "w") as f:
                 f.write(config_content)
             errors, warnings = Config.validate_config(tmppath)
             self.assertEqual(errors, [])
             self.assertEqual(len(warnings), 1)
-            self.assertIn('below the minimum', warnings[0])
+            self.assertIn("below the minimum", warnings[0])
         finally:
             os.unlink(tmppath)
