@@ -166,7 +166,11 @@ class TestConfig(TestCase):
                             'queue_max_size': 5000,
                             'max_retries': 3,
                             'retry_backoff_seconds': 0.2,
-                            'enable_test_input': False
+                            'enable_test_input': False,
+                            'rotation': 'none',
+                            'max_bytes': 104857600,
+                            'rotation_interval': 'daily',
+                            'backup_count': 7
                 }
             },
             'servers': [

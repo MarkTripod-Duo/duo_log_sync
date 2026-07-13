@@ -141,3 +141,6 @@ dmypy.json
 
 .DS_Store
 config.yml
+
+# Claude Code local session / worktree artifacts
+.claude/

@@ -48,6 +48,18 @@ class Config:
     FILE_OUTPUT_RETRY_BACKOFF_SECONDS_DEFAULT = 0.2
     FILE_OUTPUT_TEST_INPUT_ENABLED_DEFAULT = False
 
+    # Local file output rotation settings. 'none' preserves single-file
+    # append behavior. 'size' rotates when the file exceeds max_bytes,
+    # 'time' rotates on a daily boundary, 'both' rotates on either trigger.
+    FILE_OUTPUT_ROTATION_NONE = 'none'
+    FILE_OUTPUT_ROTATION_SIZE = 'size'
+    FILE_OUTPUT_ROTATION_TIME = 'time'
+    FILE_OUTPUT_ROTATION_BOTH = 'both'
+    FILE_OUTPUT_ROTATION_DEFAULT = FILE_OUTPUT_ROTATION_NONE
+    FILE_OUTPUT_MAX_BYTES_DEFAULT = 104857600  # 100 MiB
+    FILE_OUTPUT_ROTATION_INTERVAL_DEFAULT = 'daily'
+    FILE_OUTPUT_BACKUP_COUNT_DEFAULT = 7
+
     GRACEFUL_RETRY_STATUS_CODES = (HTTPStatus.TOO_MANY_REQUESTS.value,)
 
     # JSON Schema for the endpoint_server_mapping items
@@ -181,6 +193,22 @@ class Config:
                                 'minimum': 0,
                             },
                             'enable_test_input': {'type': 'boolean'},
+                            'rotation': {
+                                'type': 'string',
+                                'enum': ['none', 'size', 'time', 'both'],
+                            },
+                            'max_bytes': {
+                                'type': 'integer',
+                                'minimum': 1,
+                            },
+                            'rotation_interval': {
+                                'type': 'string',
+                                'enum': ['daily'],
+                            },
+                            'backup_count': {
+                                'type': 'integer',
+                                'minimum': 0,
+                            },
                         },
                     },
                 },
@@ -235,6 +263,10 @@ class Config:
                 'max_retries': FILE_OUTPUT_MAX_RETRIES_DEFAULT,
                 'retry_backoff_seconds': FILE_OUTPUT_RETRY_BACKOFF_SECONDS_DEFAULT,
                 'enable_test_input': FILE_OUTPUT_TEST_INPUT_ENABLED_DEFAULT,
+                'rotation': FILE_OUTPUT_ROTATION_DEFAULT,
+                'max_bytes': FILE_OUTPUT_MAX_BYTES_DEFAULT,
+                'rotation_interval': FILE_OUTPUT_ROTATION_INTERVAL_DEFAULT,
+                'backup_count': FILE_OUTPUT_BACKUP_COUNT_DEFAULT,
             },
         },
         'account': {
@@ -395,6 +427,27 @@ class Config:
         """@return whether test-input injection is enabled"""
         return cls.get_value(
             ['dls_settings', 'file_output', 'enable_test_input'])
+
+    @classmethod
+    def get_file_output_rotation(cls):
+        """@return the rotation mode for local file output"""
+        return cls.get_value(['dls_settings', 'file_output', 'rotation'])
+
+    @classmethod
+    def get_file_output_max_bytes(cls):
+        """@return the size threshold (bytes) that triggers rotation"""
+        return cls.get_value(['dls_settings', 'file_output', 'max_bytes'])
+
+    @classmethod
+    def get_file_output_rotation_interval(cls):
+        """@return the time-based rotation interval for local file output"""
+        return cls.get_value(
+            ['dls_settings', 'file_output', 'rotation_interval'])
+
+    @classmethod
+    def get_file_output_backup_count(cls):
+        """@return the number of rotated files to retain"""
+        return cls.get_value(['dls_settings', 'file_output', 'backup_count'])
 
     @classmethod
     def validate_config(cls, config_filepath):

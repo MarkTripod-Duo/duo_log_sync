@@ -6,6 +6,24 @@ Duo Log Sync (v2.5.0)
 [![Stars](https://img.shields.io/github/stars/duosecurity/duo_log_sync)](https://github.com/duosecurity/duo_log_sync/stargazers)
 [![License](https://img.shields.io/badge/License-View%20License-orange)](./LICENSE)
 
+> ## ⚠️ Unofficial Fork Notice
+>
+> **This repository is a community fork that has diverged substantially from the
+> upstream project, [`duosecurity/duo_log_sync`](https://github.com/duosecurity/duo_log_sync).**
+>
+> The changes in this fork — **`uv`-based packaging**, **local `FILE` output**,
+> and **install-as-a-service support** (Linux systemd/OpenRC/SysVinit, macOS
+> launchd, and Windows) — are **unofficial, community/maintainer updates that
+> are NOT supported by Duo Security**. They have not been reviewed, endorsed, or
+> released by Duo.
+>
+> - For the **official, Duo-supported** product, use the upstream repository and
+>   its support channels.
+> - For **issues or pull requests specific to this fork's additions**, open them
+>   **here in this repository** — not against Duo.
+>
+> Use in production at your own discretion.
+
 ## About
 `duologsync` (DLS) is a utility written by Duo Security that supports fetching logs from Duo endpoints and ingesting them to different SIEMs.
 
@@ -148,6 +166,27 @@ sudo service duologsync start
 
 The service files are located in the `service/` directory and can be customized before installation. On systemd, environment overrides can be placed in `/etc/default/duologsync`.
 
+### macOS (launchd)
+
+On macOS, the same installer script registers DuoLogSync as a launchd `LaunchDaemon` so it starts at boot and restarts on failure. Make sure the `duologsync` executable is on your `PATH` (e.g. via `uv tool install .` or `pip install .`), then run:
+
+```
+sudo ./install_service.sh /path/to/config.yml
+```
+
+This will:
+- Create a hidden `_duologsync` service account
+- Install the config to `/etc/duologsync/config.yml`
+- Render and install `/Library/LaunchDaemons/com.duosecurity.duologsync.plist`
+- Bootstrap and start the daemon (logs go to `/usr/local/var/log/duologsync/`)
+
+**Managing the service:**
+```
+sudo launchctl print system/com.duosecurity.duologsync      # status
+sudo launchctl kickstart -k system/com.duosecurity.duologsync  # restart
+sudo launchctl bootout system/com.duosecurity.duologsync     # stop / uninstall
+```
+
 ### Windows Service
 
 DuoLogSync can run as a native Windows service using `pywin32`. Install the extra dependency first:
@@ -194,7 +233,8 @@ The config file path is stored in the Windows registry. The service appears as "
 - Enabling only certain endpoints through config file.
 - Choosing how logs are formatted (JSON, CEF).
 - Support for Linux, MacOS, Windows.
-- Install as a system service on Linux (systemd, OpenRC, SysVinit) and Windows.
+- Install as a system service on Linux (systemd, OpenRC, SysVinit), macOS (launchd), and Windows.
+- Configurable local file output with retry, disk-backlog recovery, and size/time-based log rotation.
 - Support for pulling logs using Accounts API (only for MSP accounts).
 - Graceful shutdown support via SIGINT (Ctrl-C) and SIGTERM signals.
 

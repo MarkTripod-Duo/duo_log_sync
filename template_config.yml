@@ -73,6 +73,27 @@ version: '1.0.0'
     # Enable direct test automation injection for FILE writers
     #enable_test_input: False
 
+    # Log rotation for FILE output. Prevents output files from growing
+    # unbounded. Rotated files are named '<filepath>.<YYYY-MM-DD_HHMMSS>'.
+    # OPTIONS: none, size, time, both
+    #   none  - single-file append, no rotation (default)
+    #   size  - rotate when the file would exceed max_bytes
+    #   time  - rotate once per day (rotation_interval)
+    #   both  - rotate on whichever trigger is reached first
+    #rotation: 'none'
+
+    # Size threshold in bytes that triggers rotation when rotation is
+    # 'size' or 'both'. Default is 104857600 (100 MiB)
+    #max_bytes: 104857600
+
+    # Time-based rotation interval when rotation is 'time' or 'both'
+    # OPTIONS: daily
+    #rotation_interval: 'daily'
+
+    # Number of rotated files to retain; older ones are deleted.
+    # Set to 0 to delete rotated files immediately after rotation
+    #backup_count: 7
+
 # List of servers and how DLS will communicate with them
 servers:
   

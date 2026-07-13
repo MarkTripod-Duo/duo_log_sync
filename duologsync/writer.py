@@ -9,6 +9,8 @@ import os
 import random
 import socket
 import ssl
+import threading
+from datetime import date, datetime
 from pathlib import Path
 from socket import gaierror
 from tempfile import NamedTemporaryFile
@@ -63,6 +65,12 @@ class LocalFileWriter:
 
     _STOP = object()
 
+    # Rotation modes (mirror Config.FILE_OUTPUT_ROTATION_* constants).
+    ROTATION_NONE = "none"
+    ROTATION_SIZE = "size"
+    ROTATION_TIME = "time"
+    ROTATION_BOTH = "both"
+
     def __init__(
             self,
             filepath,
@@ -71,6 +79,10 @@ class LocalFileWriter:
             max_retries,
             retry_backoff_seconds,
             enable_test_input,
+            rotation=ROTATION_NONE,
+            max_bytes=104857600,
+            rotation_interval="daily",
+            backup_count=7,
             ):
         self.filepath = self._validate_filepath(filepath)
         self.checkpoint_directory = Path(checkpoint_directory)
@@ -78,6 +90,16 @@ class LocalFileWriter:
         self.max_retries = max_retries
         self.retry_backoff_seconds = retry_backoff_seconds
         self.enable_test_input = enable_test_input
+
+        # Rotation configuration. Rotation is performed synchronously inside
+        # the executor-backed write path and guarded by a threading lock so
+        # concurrent writes (worker + backlog replay) never race on the
+        # check-rename-reopen sequence.
+        self.rotation = rotation
+        self.max_bytes = max_bytes
+        self.rotation_interval = rotation_interval
+        self.backup_count = backup_count
+        self._rotate_lock = threading.Lock()
 
         self._registered_log_types = set()
         self._initialized_log_types = set()
@@ -310,6 +332,18 @@ class LocalFileWriter:
         return False, True  # pragma: no cover
 
     def _write_to_file(self, data):
+        # When rotation is disabled, preserve the original lock-free append
+        # fast path. Otherwise serialize the rotate-check + append so parallel
+        # writers cannot race on the rename/reopen.
+        if self.rotation == self.ROTATION_NONE:
+            self._append_bytes(data)
+            return
+
+        with self._rotate_lock:
+            self._maybe_rotate(len(data))
+            self._append_bytes(data)
+
+    def _append_bytes(self, data):
         flags = os.O_WRONLY | os.O_CREAT | os.O_APPEND
         if hasattr(os, "O_NOFOLLOW"):
             flags |= os.O_NOFOLLOW
@@ -326,6 +360,104 @@ class LocalFileWriter:
                     os.close(descriptor)
                 except OSError:
                     pass
+
+    def _maybe_rotate(self, incoming_len):
+        """
+        Rotate the active output file if the configured size and/or time
+        trigger has been reached. A rotation failure is logged and swallowed
+        so writing continues on the current file — rotation must never crash
+        the writer or drop data.
+        """
+        try:
+            if not self.filepath.exists():
+                return
+
+            current_size = self.filepath.stat().st_size
+
+            # An empty active file never needs rotation.
+            if current_size == 0:
+                return
+
+            should_rotate = False
+
+            if self.rotation in (self.ROTATION_SIZE, self.ROTATION_BOTH):
+                if current_size + incoming_len > self.max_bytes:
+                    should_rotate = True
+
+            if not should_rotate and self.rotation in (
+                    self.ROTATION_TIME, self.ROTATION_BOTH):
+                file_date = date.fromtimestamp(self.filepath.stat().st_mtime)
+                if file_date < date.today():
+                    should_rotate = True
+
+            if should_rotate:
+                self._rotate_file()
+        except OSError as error:
+            Program.log(
+                    f"FILE writer: rotation check failed for '{self.filepath}', "
+                    f"continuing on current file "
+                    f"error_message: {getattr(error, 'strerror', error)} "
+                    f"error_code: {getattr(error, 'errno', None)}",
+                    logging.WARNING,
+                    )
+
+    def _rotate_file(self):
+        """Rename the active file to a timestamped backup and prune old ones."""
+        timestamp = datetime.fromtimestamp(
+                self.filepath.stat().st_mtime).strftime("%Y-%m-%d_%H%M%S")
+
+        candidate = self.filepath.parent / f"{self.filepath.name}.{timestamp}"
+        counter = 1
+        # Guard against multiple rotations within the same second.
+        while candidate.exists():
+            candidate = self.filepath.parent / (
+                    f"{self.filepath.name}.{timestamp}.{counter}")
+            counter += 1
+
+        self.filepath.replace(candidate)
+        Program.log(
+                f"FILE writer: rotated '{self.filepath}' to '{candidate}'",
+                logging.INFO,
+                )
+        self._prune_backups()
+
+    def _prune_backups(self):
+        """Delete the oldest rotated files beyond backup_count.
+
+        Ordering is by modification time (oldest first) rather than by name:
+        rotated filenames are timestamped, but in a burst of rotations within
+        the same second the disambiguating suffix would break lexical ordering.
+        mtime is preserved across the rename and is always chronological.
+        """
+        if self.backup_count is None:
+            return
+
+        pattern = f"{self.filepath.name}.*"
+
+        def sort_key(path):
+            try:
+                return (path.stat().st_mtime, path.name)
+            except OSError:
+                # File vanished; sort it first so it is pruned/ignored.
+                return (0.0, path.name)
+
+        backups = sorted(
+                (path for path in self.filepath.parent.glob(pattern)
+                 if path.is_file()),
+                key=sort_key,
+                )
+
+        excess = len(backups) - self.backup_count
+        for stale in backups[:max(0, excess)]:
+            try:
+                stale.unlink()
+                Program.log(
+                        f"FILE writer: pruned rotated file '{stale}'",
+                        logging.INFO,
+                        )
+            except OSError:
+                # Best-effort cleanup; a failed unlink must not stop writing.
+                pass
 
     async def _append_backlog(self, log_type, data):
         error = await asyncio.get_event_loop().run_in_executor(
@@ -618,6 +750,10 @@ class Writer:
                         max_retries=Config.get_file_output_max_retries(),
                         retry_backoff_seconds=Config.get_file_output_retry_backoff_seconds(),
                         enable_test_input=Config.get_file_output_test_input_enabled(),
+                        rotation=Config.get_file_output_rotation(),
+                        max_bytes=Config.get_file_output_max_bytes(),
+                        rotation_interval=Config.get_file_output_rotation_interval(),
+                        backup_count=Config.get_file_output_backup_count(),
                         )
             except (
                         FileNotFoundError,
