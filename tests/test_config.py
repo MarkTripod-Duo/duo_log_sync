@@ -26,7 +26,7 @@ class TestConfig(TestCase):
         config = {'field_one': {'nested_field': True}, 'field_two': 100}
 
         Config.set_config(config)
-        
+
         with self.assertRaises(RuntimeError):
             Config.set_config(config)
 
@@ -153,7 +153,7 @@ class TestConfig(TestCase):
                 'api': {
                     'offset': 180,
                     'timeout': 120
-                },  
+                },
                 'checkpointing': {
                     'enabled': False,
                     'directory': '/tmp/dls_checkpoints'
@@ -234,7 +234,7 @@ class TestConfig(TestCase):
         config_filepath = 'tests/resources/config_files/bad_config.yml'
 
         Config.create_config(config_filepath)
-        
+
         mock_initiate_shutdown.assert_called_once()
 
     @patch('duologsync.program.Program.initiate_shutdown',

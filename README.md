@@ -1,31 +1,31 @@
 Duo Log Sync (v2.5.0)
 ===================
 
-[![Issues](https://img.shields.io/github/issues/duosecurity/duo_log_sync)](https://github.com/duosecurity/duo_log_sync/issues)
-[![Forks](https://img.shields.io/github/forks/duosecurity/duo_log_sync)](https://github.com/duosecurity/duo_log_sync/network/members)
-[![Stars](https://img.shields.io/github/stars/duosecurity/duo_log_sync)](https://github.com/duosecurity/duo_log_sync/stargazers)
+[![Issues](https://img.shields.io/github/issues/MarkTripod-Duo/duo_log_sync)](https://github.com/MarkTripod-Duo/duo_log_sync/issues)
+[![Forks](https://img.shields.io/github/forks/MarkTripod-Duo/duo_log_sync)](https://github.com/MarkTripod-Duo/duo_log_sync/network/members)
+[![Stars](https://img.shields.io/github/stars/MarkTripod-Duo/duo_log_sync)](https://github.com/MarkTripod-Duo/duo_log_sync/stargazers)
 [![License](https://img.shields.io/badge/License-View%20License-orange)](./LICENSE)
 
-> ## ⚠️ Unofficial Fork Notice
+> ## Origins & Attribution
 >
-> **This repository is a community fork that has diverged substantially from the
-> upstream project, [`duosecurity/duo_log_sync`](https://github.com/duosecurity/duo_log_sync).**
+> This is an independent, MIT-licensed project that was **originally derived
+> from [`duosecurity/duo_log_sync`](https://github.com/duosecurity/duo_log_sync)**
+> and has since diverged substantially — adding `uv`-based packaging, local
+> `FILE` output with rotation, install-as-a-service support (Linux
+> systemd/OpenRC/SysVinit, macOS launchd, and Windows), and jsonschema-based
+> config validation.
 >
-> The changes in this fork — **`uv`-based packaging**, **local `FILE` output**,
-> and **install-as-a-service support** (Linux systemd/OpenRC/SysVinit, macOS
-> launchd, and Windows) — are **unofficial, community/maintainer updates that
-> are NOT supported by Duo Security**. They have not been reviewed, endorsed, or
-> released by Duo.
+> It is **not affiliated with, endorsed by, or supported by Duo Security or
+> Cisco**. The original copyright and MIT license are retained (see
+> [`LICENSE`](./LICENSE)). "Duo" appears here only because the tool consumes the
+> Duo Admin API.
 >
-> - For the **official, Duo-supported** product, use the upstream repository and
->   its support channels.
-> - For **issues or pull requests specific to this fork's additions**, open them
->   **here in this repository** — not against Duo.
->
-> Use in production at your own discretion.
+> For issues, questions, or contributions, use **this repository's**
+> [issue tracker](https://github.com/MarkTripod-Duo/duo_log_sync/issues) — not
+> Duo's support channels.
 
 ## About
-`duologsync` (DLS) is a utility written by Duo Security that supports fetching logs from Duo endpoints and ingesting them to different SIEMs.
+`duologsync` (DLS) is a utility that fetches logs from Duo endpoints (via the Duo Admin API) and ingests them into SIEMs and other destinations. It was originally created by Duo Security; this independent fork extends it with local file output, log rotation, cross-platform service installation, and a modernized uv/`pyproject` toolchain.
 
 ---
 ## Prerequisite
@@ -176,14 +176,14 @@ sudo ./install_service.sh /path/to/config.yml
 This will:
 - Create a hidden `_duologsync` service account
 - Install the config to `/etc/duologsync/config.yml`
-- Render and install `/Library/LaunchDaemons/com.duosecurity.duologsync.plist`
+- Render and install `/Library/LaunchDaemons/io.github.marktripod-duo.duologsync.plist`
 - Bootstrap and start the daemon (logs go to `/usr/local/var/log/duologsync/`)
 
 **Managing the service:**
 ```
-sudo launchctl print system/com.duosecurity.duologsync      # status
-sudo launchctl kickstart -k system/com.duosecurity.duologsync  # restart
-sudo launchctl bootout system/com.duosecurity.duologsync     # stop / uninstall
+sudo launchctl print system/io.github.marktripod-duo.duologsync       # status
+sudo launchctl kickstart -k system/io.github.marktripod-duo.duologsync  # restart
+sudo launchctl bootout system/io.github.marktripod-duo.duologsync     # stop / uninstall
 ```
 
 ### Windows Service
@@ -338,8 +338,10 @@ The config file path is stored in the Windows registry. The service appears as "
 
 ## Support
 
-For issues and questions:
+For issues and questions about **this project**:
 
-- Open an issue on [GitHub](https://github.com/duosecurity/duo_log_sync/issues)
-- Contact Duo Support at support@duosecurity.com
-- Visit the [Duo documentation](https://duo.com/docs) for additional resources
+- Open an issue on [GitHub](https://github.com/MarkTripod-Duo/duo_log_sync/issues)
+
+For the underlying Duo Admin API (credentials, endpoints, permissions), see the
+[Duo documentation](https://duo.com/docs). Note that this project is independent
+and not supported by Duo Security — do not contact Duo Support about it.

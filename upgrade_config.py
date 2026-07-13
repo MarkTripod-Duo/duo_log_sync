@@ -8,7 +8,7 @@ EDIT = 'EDIT'
 DELETE = 'DELETE'
 
 # Latest version of config. Maybe keep this value in a central location like
-# __version__.py? 
+# __version__.py?
 CURRENT_CONFIG_VERSION = '1.0.0'
 
 # 'Patent pending', ingenius way to update config. Keep a list of changes
@@ -127,7 +127,7 @@ def write_config(config, config_path):
     @param config       The config to write
     @param config_path  Location where config should be written to
     """
-   
+
     with open(config_path, 'w') as config_file:
         yaml.dump(config, config_file)
 
@@ -211,7 +211,7 @@ def apply_move_changeset(config, move_changeset):
 
         if new_path is not None:
             new_elem = get_elem(config, new_path[:-1])
-            new_elem[new_path[-1]] = temp 
+            new_elem[new_path[-1]] = temp
 
     return config
 

@@ -3,7 +3,7 @@ from unittest.mock import patch
 from duologsync.program import Program
 
 class TestConfig(TestCase):
-    
+
     def tearDown(self):
         Program._running = True
         Program._logging_set = False
@@ -28,7 +28,7 @@ class TestConfig(TestCase):
         Program.initiate_shutdown('test')
 
         self.assertEqual(Program._running, False)
- 
+
     def test_setup_logging_normal(self):
         filepath = 'logs.txt'
 

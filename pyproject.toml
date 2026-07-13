@@ -4,16 +4,16 @@ build-backend = "hatchling.build"
 
 [project]
 name = "duologsync"
-version = "2.5.0"
+dynamic = ["version"]
 description = "Ingest + sync logs from the Duo Admin API into another system."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.8"
 authors = [
-    { name = "Duo Security, Inc.", email = "support@duosecurity.com" },
+    { name = "Mark Tripod" },
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "License :: OSI Approved :: MIT License",
     "Intended Audience :: System Administrators",
     "Intended Audience :: Developers",
@@ -36,7 +36,9 @@ dependencies = [
 windows = ["pywin32>=306"]
 
 [project.urls]
-Homepage = "https://github.com/duosecurity/duo_log_sync"
+Homepage = "https://github.com/MarkTripod-Duo/duo_log_sync"
+Repository = "https://github.com/MarkTripod-Duo/duo_log_sync"
+Issues = "https://github.com/MarkTripod-Duo/duo_log_sync/issues"
 
 [project.scripts]
 duologsync = "duologsync.app:main"
@@ -53,6 +55,9 @@ include = [
     "README.md",
 ]
 
+[tool.hatch.version]
+path = "duologsync/__version__.py"
+
 [tool.hatch.build.targets.wheel]
 packages = ["duologsync"]
 
@@ -63,26 +68,26 @@ addopts = [
     "-vvv",
 ]
 
-[tool.flake8]
+[tool.ruff]
+line-length = 120
+target-version = "py38"
+
+[tool.ruff.lint]
+# Start from a pragmatic baseline: pyflakes (F) + pycodestyle (E,W). The
+# ignores below mirror the tolerances carried over from the previous flake8
+# config so the existing code lints clean; tighten over time.
+select = ["E", "F", "W"]
 ignore = [
-    "W503",
-    "E203",
-    "E261",
-    "E262",
-    "E265",
-    "E266",
-    "E302",
-    "E303",
-    "E305",
-    "E501",
-    "E999",
-    "F821",
-    "F841",
-    "F401",
-    "F403",
+    "E501",  # line length is handled by the formatter, not enforced hard
+    "E203",  # whitespace before ':' (Black/formatter compatible)
+    "E741",  # ambiguous variable names (pre-existing)
+    "F401",  # unused imports (pre-existing tolerance)
+    "F403",  # star imports (pre-existing tolerance)
+    "F841",  # unused local variables (pre-existing tolerance)
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=7",
+    "ruff>=0.6",
 ]
