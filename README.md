@@ -1,6 +1,8 @@
 Duo Log Sync (v2.5.0)
 ===================
 
+[![CI](https://github.com/MarkTripod-Duo/duo_log_sync/actions/workflows/ci.yml/badge.svg)](https://github.com/MarkTripod-Duo/duo_log_sync/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/MarkTripod-Duo/duo_log_sync/graph/badge.svg)](https://codecov.io/gh/MarkTripod-Duo/duo_log_sync)
 [![Issues](https://img.shields.io/github/issues/MarkTripod-Duo/duo_log_sync)](https://github.com/MarkTripod-Duo/duo_log_sync/issues)
 [![Forks](https://img.shields.io/github/forks/MarkTripod-Duo/duo_log_sync)](https://github.com/MarkTripod-Duo/duo_log_sync/network/members)
 [![Stars](https://img.shields.io/github/stars/MarkTripod-Duo/duo_log_sync)](https://github.com/MarkTripod-Duo/duo_log_sync/stargazers)
