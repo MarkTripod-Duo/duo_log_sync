@@ -91,7 +91,6 @@ For FILE output, ensure the configured destination directory is accessible to th
    duologsync <complete/path/to/config.yml>
    ```
 6. If a new version of DLS is downloaded from GitHub, run `pip install .` again to reinstall `duologsync` for changes to take effect.
-
 ### Compatibility
 
 - Duologsync is compatible with Python versions `3.8`, `3.9`, `3.10`, `3.11`, `3.12`, and `3.13`.

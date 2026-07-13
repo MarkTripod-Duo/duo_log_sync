@@ -5,10 +5,12 @@ Definition of the Consumer class
 import os
 import json
 import logging
+import traceback
 from duologsync.config import Config
 from duologsync.program import Program
 from duologsync.producer.producer import Producer
 from duologsync.consumer.cef import log_to_cef
+from duologsync.util import extract_error_info
 
 
 class Consumer:
@@ -70,23 +72,12 @@ class Consumer:
                     successful_write = True
 
                 # Handle connection failures: broken pipe, connection reset,
-                # connection aborted, OS-level socket errors, and timeouts
-                except (BrokenPipeError, ConnectionResetError,
-                        ConnectionAbortedError, OSError) as conn_error:
-                    error_code = getattr(conn_error, "errno", None)
-                    error_message = getattr(conn_error, "strerror", str(conn_error))
-                    shutdown_reason = (
-                        f"{self.log_type} consumer: connection error "
-                        f"error_type: {type(conn_error).__name__} "
-                        f"error_message: {error_message} "
-                        f"error_code: {error_code}"
-                    )
-                    Program.log(
-                        f"{self.log_type} consumer: connection to the "
-                        f"destination server was reset or shutdown "
-                        f"({type(conn_error).__name__}: {conn_error})",
-                        logging.ERROR,
-                    )
+                # connection aborted, and other OS-level socket errors. OSError
+                # is the base class for all of these.
+                except OSError as conn_error:
+                    err = extract_error_info(conn_error)
+                    shutdown_reason = (f"{self.log_type} consumer: connection error - [{conn_error} error_code: {err['error_code']}]")
+                    Program.log(f"{self.log_type} consumer: {type(conn_error).__name__} - connection to the destination server was reset or shutdown - error_message: {err['error_message']} error_code: {err['error_code']}\n{traceback.format_exc()}", logging.ERROR,)
                     Program.initiate_shutdown(shutdown_reason)
 
                 finally:

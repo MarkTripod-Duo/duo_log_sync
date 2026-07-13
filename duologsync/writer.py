@@ -10,6 +10,7 @@ import random
 import socket
 import ssl
 import threading
+import traceback
 from datetime import date, datetime
 from pathlib import Path
 from socket import gaierror
@@ -18,11 +19,6 @@ from tempfile import NamedTemporaryFile
 from duologsync import util
 from duologsync.config import Config
 from duologsync.program import Program
-
-
-def _extract_error_info(error):
-    """Safely extract (error_code, error_message) from an exception."""
-    return getattr(error, "errno", None), getattr(error, "strerror", str(error))
 
 
 class DatagramProtocol(asyncio.DatagramProtocol):
@@ -645,11 +641,11 @@ class Writer:
                 # and we need to handle it
                 # Store the failed UDP ingestion logs in a file and log the error
                 # message to the console
-                error_code, error_message = _extract_error_info(error)
+                err = util.extract_error_info(error)
                 Program.log(
                     f"{log_type} consumer: UDP send failed to "
                     f"{self.hostname}:{self.port} "
-                    f"error_message: {error_message} error_code: {error_code}",
+                    f"error_message: {err['error_message']} error_code: {err['error_code']}",
                     logging.WARNING,
                 )
                 util.store_failed_udp_ingestion_logs(
@@ -662,20 +658,15 @@ class Writer:
                 return
             await self.writer.write(data, log_type)
         else:
-            # TCP/TCPSSL — propagate connection errors to the consumer
-            # for graceful shutdown handling
+            # TCP/TCPSSL — propagate connection errors to the consumer for
+            # graceful shutdown handling. asyncio.TimeoutError is caught
+            # explicitly because it is not an OSError subclass on Python < 3.11.
             try:
                 self.writer.write(data)
                 await self.writer.drain()
-            except (OSError, ConnectionError, asyncio.TimeoutError) as error:
-                error_code, error_message = _extract_error_info(error)
-                Program.log(
-                    f"{log_type} consumer: TCP write/drain failed to "
-                    f"{self.hostname}:{self.port} "
-                    f"error_type: {type(error).__name__} "
-                    f"error_message: {error_message} error_code: {error_code}",
-                    logging.ERROR,
-                )
+            except (OSError, asyncio.TimeoutError) as error:
+                err = util.extract_error_info(error)
+                Program.log(f"{log_type} writer: {type(error).__name__} while sending data to {self.hostname}:{self.port} over {self.protocol} - error_message: {err['error_message']} error_code: {err['error_code']}\n{traceback.format_exc()}", logging.ERROR,)
                 raise
 
     def register_log_type(self, log_type):
@@ -718,11 +709,11 @@ class Writer:
                 logging.WARNING,
             )
         except OSError as error:
-            error_code, error_message = _extract_error_info(error)
+            err = util.extract_error_info(error)
             Program.log(
                 f"DuoLogSync: error closing TCP connection to "
                 f"{self.hostname}:{self.port} "
-                f"error_message: {error_message} error_code: {error_code}",
+                f"error_message: {err['error_message']} error_code: {err['error_code']}",
                 logging.WARNING,
             )
 
@@ -791,8 +782,8 @@ class Writer:
 
         # Failed to open the certificate file
         except FileNotFoundError as fnf_error:
-            error_code, error_message = _extract_error_info(fnf_error)
-            shutdown_reason = f"certificate file '{cert_filepath}' could not be opened due to error: {error_message} error_code: {error_code}"
+            err = util.extract_error_info(fnf_error)
+            shutdown_reason = f"certificate file '{cert_filepath}' could not be opened due to error: {err['error_message']} error_code: {err['error_code']}"
             help_message = f"make sure that certificate file '{cert_filepath}' to establish SSL connection is correct."
 
         # Couldn't establish a connection within 60 seconds
@@ -802,8 +793,8 @@ class Writer:
         # If an invalid hostname or port number is given or simply failed to
         # connect using the host and port given
         except (gaierror, OSError) as error:
-            error_code, error_message = _extract_error_info(error)
-            shutdown_reason = f"error while connecting to {host}:{port} error_message: {error_message} error_code: {error_code}"
+            err = util.extract_error_info(error)
+            shutdown_reason = f"error while connecting to {host}:{port} error_message: {err['error_message']} error_code: {err['error_code']}"
 
         # An error did not occur and the writer was successfully created
         else:
