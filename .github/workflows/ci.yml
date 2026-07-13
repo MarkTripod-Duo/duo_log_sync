@@ -69,19 +69,24 @@ jobs:
       - name: Verify service artifacts ship in the sdist
         run: |
           set -euo pipefail
-          sdist=$(ls dist/*.tar.gz | head -1)
+          shopt -s nullglob
+          dists=(dist/*.tar.gz)
+          sdist="${dists[0]}"
           echo "Inspecting ${sdist}"
+          # Read the archive listing once. Grep a here-string (no pipe) so that
+          # grep -q short-circuiting can't SIGPIPE tar and trip pipefail.
+          contents=$(tar tzf "${sdist}")
           for expected in \
             "service/io.github.marktripod-duo.duologsync.plist" \
             "service/duologsync.service" \
             "install_service.sh" \
             "install_service.bat"; do
-            if ! tar tzf "${sdist}" | grep -q "/${expected}$"; then
+            if ! grep -q "/${expected}$" <<<"${contents}"; then
               echo "::error::missing ${expected} in sdist"
               exit 1
             fi
           done
-          if tar tzf "${sdist}" | grep -q "/\.claude/"; then
+          if grep -q "/\.claude/" <<<"${contents}"; then
             echo "::error::.claude leaked into sdist"
             exit 1
           fi
